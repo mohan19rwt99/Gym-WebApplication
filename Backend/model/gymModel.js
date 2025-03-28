@@ -6,10 +6,10 @@ const gymSchema = new mongoose.Schema({
         required: [true, "Gym Name is required"],
         trim: true
     },
-    location: {
-        type: String,
-        required: [true, "Location is required"],
-        trim: true
+    address:{
+        location : {type: String, required: true},
+        street:{type:String, required:true},
+        place_id:{type: String}
     },
     pricing: {
         hourlyRate: {

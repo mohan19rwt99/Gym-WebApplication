@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@api/instamojo": "file:.api/apis/instamojo",
     "@kinde-oss/kinde-node-express": "^1.6.0",
     "axios": "^1.6.0",
     "cors": "^2.8.5",

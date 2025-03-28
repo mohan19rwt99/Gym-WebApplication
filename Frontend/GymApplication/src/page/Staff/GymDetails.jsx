@@ -85,7 +85,7 @@ const GymDetails = () => {
                 ) : (
                     <div>
                         <h2 className="text-2xl font-bold">{gymDetails.gymName}</h2>
-                        <p className="text-gray-700 mb-4">Location: {gymDetails.location}</p>
+                        <p className="text-gray-700 mb-4">Location: {gymDetails.address.location}</p>
 
                         {gymDetails?.gymName && (
                             <Link

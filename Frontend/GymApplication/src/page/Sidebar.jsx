@@ -1,86 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
 import { IoMdClose, IoIosApps } from 'react-icons/io';
 import { AiOutlineHome, AiOutlineUser } from 'react-icons/ai';
 import { MdAddBusiness } from 'react-icons/md';
 
-const Sidebar = ({ permissions }) => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar = ({ permissions, isCollapsed, setIsCollapsed }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log("Sidebar Permissions:", permissions);  // Confirm here
+        console.log("Sidebar Permissions:", permissions);
     }, [permissions]);
 
     return (
-        <div className={`bg-gray-800 text-white flex flex-col p-5 h-screen fixed top-0 left-0 
-                        ${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300`}>
+        <div className={`bg-gray-800 text-white flex flex-col p-4 h-screen fixed top-0 left-0 
+                        ${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 overflow-hidden`}>
 
-            {/* Hamburger Menu Toggle */}
             <div
                 className="cursor-pointer mb-6 text-white"
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={() => setIsCollapsed(!isCollapsed)} // Corrected line
             >
                 {isCollapsed ? <FiMenu size={28} /> : <IoMdClose size={28} />}
             </div>
 
-            {/* Sidebar Links */}
             <nav>
                 <ul className="space-y-3">
-
-                    {/* Common Links for All Roles */}
                     <li
                         className="cursor-pointer hover:bg-gray-700 p-2 rounded flex items-center"
                         onClick={() => navigate('/')}
                     >
                         <AiOutlineHome size={24} className="mr-3" />
-                        {!isCollapsed && 'Dashboard'}
+                        <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
+                            Dashboard
+                        </span>
+                    
                     </li>
 
-                    {/* Admin Links */}
-                    {permissions.includes('manage_gyms') && (
+                    {permissions && permissions.includes('manage_gyms') && (
                         <>
                             <li
                                 className="cursor-pointer hover:bg-gray-700 p-2 rounded flex items-center"
                                 onClick={() => navigate('/add-gym')}
                             >
                                 <MdAddBusiness size={24} className="mr-3" />
-                                {!isCollapsed && 'Add Gym'}
+                                <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
+                                    Add Gym
+                                </span>
                             </li>
                             <li
                                 className="cursor-pointer hover:bg-gray-700 p-2 rounded flex items-center"
-                                onClick={() => navigate('/users')}
+                                onClick={() => navigate('/customer-history')}
                             >
                                 <AiOutlineUser size={24} className="mr-3" />
-                                {!isCollapsed && 'Users'}
+                                <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
+                                    Customer List
+                                </span>
                             </li>
                             <li
                                 className="cursor-pointer hover:bg-gray-700 p-2 rounded flex items-center"
                                 onClick={() => navigate('/gym-list')}
                             >
                                 <IoIosApps size={24} className="mr-3" />
-                                {!isCollapsed && 'Gym List'}
+                                <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
+                                    Gym List
+                                </span>
                             </li>
                         </>
                     )}
 
-                    {/* Customer Links */}
-                    {permissions.includes('view-gyms') && (
+                    {permissions && permissions.includes('view-gyms') && (
                         <>
                             <li
                                 className="cursor-pointer hover:bg-gray-700 p-2 rounded flex items-center"
                                 onClick={() => navigate('/browse-gyms')}
                             >
                                 <AiOutlineUser size={24} className="mr-3" />
-                                {!isCollapsed && 'Browser hello Gyms'}
+                                <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
+                                    Gyms Near You
+                                </span>
                             </li>
                             <li
                                 className="cursor-pointer hover:bg-gray-700 p-2 rounded flex items-center"
                                 onClick={() => navigate('/book-session')}
                             >
                                 <AiOutlineUser size={24} className="mr-3" />
-                                {!isCollapsed && 'Book a Session'}
+                                 <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
+                                    Book a Seesion
+                                </span>
                             </li>
                         </>
                     )}

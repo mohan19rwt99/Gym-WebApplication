@@ -18,15 +18,16 @@ const NewGymAdd = () => {
 
   const [formData, setFormData] = useState({
     gymName: "",
-    location: "",
-    hourlyRate: "",
-    weeklyRate: "",
-    monthlyRate: "",
-    trainerHourlyRate: "",
-    trainerWeeklyRate: "",
-    trainerMonthlyRate: "",
+    address: {
+      location: "",
+      street:"",
+      place_id: "",      
+    },
+    pricing:"",
+    personalTrainerPricing:"",
     description: "",
   })
+  console.log("setform data", formData)
 
   const [position, setPosition] = useState({ lat: 29.927, lng: 73.876 }) // Default Location
 
@@ -50,60 +51,91 @@ const NewGymAdd = () => {
     }
   }
 
+
   const inputHandler = (e) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-  }
+    const { name, value } = e.target;
+    console.log("Input Change:", name, value);
+
+    if (["location","street", "place_id"].includes(name)) {
+      setFormData((prevState) => ({
+        ...prevState,
+        address: {
+          ...prevState.address,
+          [name]: value,
+        },
+      }));
+    } else if (["hourlyRate", "weeklyRate", "monthlyRate", "trainerHourlyRate", "trainerWeeklyRate", "trainerMonthlyRate"].includes(name)) {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value !== "" ? parseFloat(value) : "",
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const token = await getToken() // Ensure token retrieval
+    e.preventDefault();
+    const token = await getToken();
     if (!token) {
-      toast.error("Token not found. Please login again.")
-      return
+      toast.error("Token not found. Please login again.");
+      return;
     }
+
+    // Convert empty strings to null or leave them as is, or remove them
+    const parseNumber = (value) => {
+      if (value === "") {
+        return null; // Or you can return undefined, or leave it as ""
+      }
+      return Number(value);
+    };
 
     const data = {
       ...formData,
       coordinates: position,
       pricing: {
-        hourlyRate: Number.parseFloat(formData.hourlyRate),
-        weeklyRate: Number.parseFloat(formData.weeklyRate),
-        monthlyRate: Number.parseFloat(formData.monthlyRate),
+        hourlyRate: parseNumber(formData.hourlyRate),
+        weeklyRate: parseNumber(formData.weeklyRate),
+        monthlyRate: parseNumber(formData.monthlyRate),
       },
       personalTrainerPricing: {
-        hourlyRate: Number.parseFloat(formData.trainerHourlyRate),
-        weeklyRate: Number.parseFloat(formData.trainerWeeklyRate),
-        monthlyRate: Number.parseFloat(formData.trainerMonthlyRate),
+        hourlyRate: parseNumber(formData.trainerHourlyRate),
+        weeklyRate: parseNumber(formData.trainerWeeklyRate),
+        monthlyRate: parseNumber(formData.trainerMonthlyRate),
       },
       openingTime: new Date(openingTime),
       closingTime: new Date(closingTime),
-    }
+    };
+
+    console.log("data price", data)
 
     try {
       const response = await axios.post("http://localhost:4000/api/addgym", data, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
       if (response.status >= 200 && response.status < 300) {
         toast.success(response.data.msg || "Gym Added Successfully", {
           position: "top-right",
           duration: 4000,
-        })
+        });
         setTimeout(() => {
-          navigate("/add-gym")
-        }, 1000)
+          navigate("/add-gym");
+        }, 1000);
       }
     } catch (error) {
-      console.error("Gym not added:", error.response?.data || error.message)
+      console.error("Gym not added:", error.response?.data || error.message);
       toast.error(error.response?.data?.msg || "Failed to add gym", {
         position: "top-right",
         duration: 4000,
-      })
+      });
     }
-  }
+  };
 
   return (
     <>
@@ -128,7 +160,7 @@ const NewGymAdd = () => {
           </button>
         </div>
         <div className="p-6 space-y-6">
-          <form onSubmit={handleSubmit}>
+          <form >
             <div className="grid grid-cols-6 gap-6">
               {/* Name */}
               <div className="col-span-6 sm:col-span-3">
@@ -237,7 +269,7 @@ const NewGymAdd = () => {
                 />
               </div>
 
-              <br/>
+              <br />
               {/* Opening Time */}
               <div className="col-span-6 sm:col-span-3">
                 <label className="text-sm font-medium text-gray-900 block mb-2">Opening Time</label>
@@ -266,13 +298,16 @@ const NewGymAdd = () => {
                   className="border border-gray-300 p-2 rounded-md w-full"
                 />
               </div>
-              {/* Map of location */}             
-              
+
+    
+
+              {/* Map of location */}
+
               <div className="col-span-6 sm:col-span-6">
                 <label className="text-sm font-medium text-gray-900 block mb-2">Gym Location</label>
                 <div className="h-[400px] w-full rounded-lg overflow-hidden border border-gray-300">
-                  <GymLocationMap position={position} setPosition={setPosition} 
-                  setFormData={setFormData}/>
+                  <GymLocationMap position={position} setPosition={setPosition}
+                    setFormData={setFormData} />
                 </div>
               </div>
               {/* Gym Details */}
@@ -289,12 +324,13 @@ const NewGymAdd = () => {
                   placeholder="Details"
                 ></textarea>
               </div>
-              
 
-              
+
+              {/* onSubmit={handleSubmit} */}
             </div>
             <div className="p-6 border-t border-gray-200 rounded-b">
               <button
+                onClick={handleSubmit}
                 className="text-white bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:ring-cyan-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center cursor-pointer"
                 type="submit"
               >

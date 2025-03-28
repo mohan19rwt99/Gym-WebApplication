@@ -84,7 +84,7 @@ const AddGym = () => {
     },
     {
       name: "Location",
-      selector: (row) => row.location,
+      selector: (row) => `${row.address.street}, ${row.address.location}`,
       sortable: true,
     }, {
       name: "Pricing (Hourly/Weekly/Monthly)",
@@ -154,9 +154,7 @@ const AddGym = () => {
             progressPending={loading} // Shows spinner while loading
             pagination
             highlightOnHover
-            striped
-
-          />
+            striped          />
         </div>
 
       </div>

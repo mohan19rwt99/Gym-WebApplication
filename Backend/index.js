@@ -14,6 +14,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+
 // Kinde Authentication Config
 const config = {
   clientId: process.env.KINDE_CLIENT_ID,  
@@ -34,6 +36,7 @@ setupKinde(config, app);
 
 // Routes
 app.use("/api", authRoutes);
+app.use("/api/payment", authRoutes)
 
 // Database connection
 connectDB();
