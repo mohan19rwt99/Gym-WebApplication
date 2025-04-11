@@ -6,67 +6,75 @@ const gymSchema = new mongoose.Schema({
         required: [true, "Gym Name is required"],
         trim: true
     },
-    address:{
-        location : {type: String, required: true},
-        street:{type:String, required:true},
-        place_id:{type: String}
+    address: {
+        location: { type: String, required: true },
+        place_id: { type: String },
+        street: { type: String }
+    },
+    coordinates: {
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true }
     },
     pricing: {
-        hourlyRate: {
-            type: Number,
-            required: true, min: 0
-        },
-        weeklyRate: {
-            type: Number,
-            required: true, min: 0
-        },
-        monthlyRate: {
-            type: Number,
-            required: true, min: 0
-        }
+        hourlyRate: { type: Number, required: true, min: 0 },
+        weeklyRate: { type: Number, required: true, min: 0 },
+        monthlyRate: { type: Number, required: true, min: 0 }
     },
     personalTrainerPricing: {
-        hourlyRate: {
-            type: Number,
-            required: true, min: 0
+        hourlyRate: { type: Number, required: true, min: 0 },
+        weeklyRate: { type: Number, required: true, min: 0 },
+        monthlyRate: { type: Number, required: true, min: 0 }
+    },
+    timings: {
+        morning: {
+          openingTime: { type: Date, required: true },
+          closingTime: { 
+            type: Date, 
+            required: true,
+            validate: {
+              validator: function(value) {
+                return value && this.parent().openingTime && value.getTime() > this.parent().openingTime.getTime();
+              },
+              message: 'Morning closing time must be after opening time'
+            }
+          }
         },
-        weeklyRate: {
-            type: Number,
-            required: true, min: 0
-        },
-        monthlyRate: {
-            type: Number,
-            required: true, min: 0
+        evening: {
+          openingTime: { type: Date, required: true },
+          closingTime: { 
+            type: Date, 
+            required: true,
+            validate: {
+              validator: function(value) {
+                return value && this.parent().openingTime && value.getTime() > this.parent().openingTime.getTime();
+              },
+              message: 'Evening closing time must be after opening time'
+            }
+          }
         }
-    },
-    openingTime: {
-        type: String,
-        required: [true, "Opening time is required"]
-    },
-    closingTime: {
+      },
+    currency: {
         type: String,
         required: true,
-        validate: {
-            validator: function (value) {
-                return value > this.openingTime;
-            },
-            message: 'Closing time must be after opening time'
-        }
+        enum: ['INR', 'USD', 'EUR', 'GBP', 'JPY', 'RUB', 'KRW'],
+        default: 'INR'
     },
-    
     description: {
         type: String,
-        maxlength: [500, "Description can not be more then 500 charachters"]
+        required: true,
+        maxlength: [500, "Description cannot be more than 500 characters"]
     },
-    gymOwner:{
+    gymOwner: {
         type: String,
         required: true
     }
-}
-    , {
-        timestamps: true
-    })
+}, {
+    timestamps: true
+});
 
-const GymAdd = mongoose.model("gym", gymSchema)
+// Add index for geospatial queries if needed
+gymSchema.index({ coordinates: '2dsphere' });
+
+const GymAdd = mongoose.model("Gym", gymSchema);
 
 export default GymAdd;

@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
+import toast from 'react-hot-toast';
 
 const BookDetails = () => {
     const { gymId } = useParams();
@@ -12,6 +13,8 @@ const BookDetails = () => {
     const [loading, setLoading] = useState(true);
     const [selectedTime, setSelectedTime] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
+    const [openingTime, setOpeningTime] = useState("");
+    const [closingTime, setClosingTime] = useState("");
 
     useEffect(() => {
         const fetchGymDetail = async () => {
@@ -20,7 +23,14 @@ const BookDetails = () => {
                 const response = await axios.get(`http://localhost:4000/api/getSingleGym/${gymId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                console.log("openig Time", response.data)
+                console.log("openig Time", response.data.gymName)
+                console.log("openig Time", response.data.openingTime)
+               if(response.data){
                 setGymDetail(response.data);
+                setOpeningTime(formatTime(response.data.openingTime));
+                setClosingTime(formatTime(response.data.closingTime))
+               }
             } catch (error) {
                 console.log("Error", error);
             } finally {
@@ -33,30 +43,62 @@ const BookDetails = () => {
     const formatTime = (timestamp) => {
         if (!timestamp) return "N/A";
         const date = new Date(timestamp);
-        return date.toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        });
+        return date.toLocaleTimeString('en-IN',{
+            hour:'2-digit',
+            minute:'2-digit',
+            hour12:false,
+            timeZone:'Asia/kolkata'
+        })
     };
 
     const handleSubmit = () => {
         if (!selectedDate) {
-            alert("Please select a date.");
+            toast.error("Please select a date.");
             return;
         }
         if (!selectedTime) {
-            alert("Please select a gym visit time.");
+            toast.error("Please select a gym visit time.");
             return;
         }
-        navigate(`/CheckPrice/${gymId}?date=${selectedDate}&time=${selectedTime}`);
+
+        const today = new Date().toISOString().split("T")[0];
+
+        if(selectedDate === today){
+            const now = new Date();
+            const [hours, minutes] = selectedTime.split(":");
+            const selectedDateTime = new Date();
+            selectedDateTime.setHours(parseInt(hours))
+            selectedDateTime.setMinutes(parseInt(minutes))
+            selectedDateTime.setSeconds(0)
+
+            if(selectedDateTime < now){
+                toast.error("Selected time has already passed:");
+                return ;
+            }
+        }
+
+     
+        const selectedTimeNumber = parseInt(selectedTime.replace(":", ""),10);
+        const openingTimeNumber = parseInt(openingTime.replace(":", ""),10)
+        const closingTimeNumber = parseInt(closingTime.replace(":", ""),10)
+
+        if(selectedTimeNumber < openingTimeNumber || selectedTimeNumber > closingTimeNumber){
+            toast.error(`Please Select a time between ${openingTime} to ${closingTime}`,{
+                position:"top-center",
+                duration:2000,
+            }) 
+            return;
+        }
+        navigate(`/CheckPrice/${gymId}`,{
+            state:{selectedDate, selectedTime}
+        });
     };
 
     return (
         <div>
             <button
                 onClick={() => navigate(-1)}
-                className="mb-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 transition ml-5">
+                className="mb-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 transition ml-5 cursor-pointer">
                 Back
             </button>
             <div className='flex justify-center p-6'>
@@ -77,8 +119,8 @@ const BookDetails = () => {
                             <h1 className="text-2xl font-bold text-gray-800">{gymDetail.gymName}</h1>
                             <p className="text-gray-600 mt-2">{gymDetail.description}</p>
                             <div className="flex justify-between items-center text-gray-600 font-semibold mt-3">
-                                <span><strong>Opening:</strong> {formatTime(gymDetail.openingTime)}</span>
-                                <span><strong>Closing:</strong> {formatTime(gymDetail.closingTime)}</span>
+                                <span><strong>Opening:</strong> {openingTime} AM</span>
+                                <span><strong>Closing:</strong> {closingTime} PM</span>
                             </div>
                             <div className='flex flex-col items-center mt-4'>
                                 <label className="text-gray-700 font-semibold mb-2">Select Date:</label>
@@ -87,6 +129,7 @@ const BookDetails = () => {
                                     className="border rounded-lg px-4 py-2"
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
+                                    min={new Date().toString().split("T")[0]}
                                 />
                             </div>
                             <div className='flex flex-col items-center mt-4'>
@@ -94,8 +137,8 @@ const BookDetails = () => {
                                 <input
                                     type="time"
                                     name="appointment"
-                                    min="06:00"
-                                    max="22:00"
+                                    min={openingTime}
+                                    max={closingTime}
                                     required
                                     className="border rounded-lg px-4 py-2"
                                     value={selectedTime}

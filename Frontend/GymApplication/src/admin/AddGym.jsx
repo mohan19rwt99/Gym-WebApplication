@@ -129,7 +129,7 @@ const AddGym = () => {
   ]
 
   return (
-    <div className="flex min-h-screen bg-green-100 overflow-y-auto">
+    <div className="flex min-h-screen overflow-y-auto">
       <div className="flex-1 p-6">
 
         {/* Add New Gym Button */}

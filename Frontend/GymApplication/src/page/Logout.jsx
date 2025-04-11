@@ -1,0 +1,29 @@
+import React from 'react'
+import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
+import { useNavigate } from 'react-router-dom';
+import { CiLogout } from "react-icons/ci";
+
+const Logout = ({isCollapsed}) => {
+    const navigate = useNavigate();
+    const {logout} = useKindeAuth();
+
+    const handleLogout = () => {
+        navigate("/home");
+        logout();
+    };
+  return (
+    <>
+         <button
+            onClick={handleLogout}
+
+            className={`w-full text-white font-semibold py-2 px-4 rounded bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all duration-200 cursor-pointer
+            ${isCollapsed ? 'justify-center' : 'justify-start'} `}
+        >
+            <CiLogout size={24} className={`${isCollapsed ? 'mx-auto' : 'mr-10'}`}/>
+            <span className={`${isCollapsed ? 'hidden' : 'block'}`}>Logout</span>
+        </button>
+    </>
+  )
+}
+
+export default Logout

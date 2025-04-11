@@ -1,4 +1,3 @@
-import './App.css';
 import Home from './Home';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Welcome from './page/Welcome';
@@ -23,26 +22,38 @@ import BookDetails from './page/Book And Gym Details/BookDetails';
 import CheckPrice from './page/Book And Gym Details/CheckPrice';
 import Confirm from './page/Book And Gym Details/Confirm';
 import CustomerHistory from './admin/CustomerHistory';
+import AdminUserFiltter from './admin/AdminUserFiltter';
+import CustomerDashboard from './customerDashboard/CustomerDashboard';
 
 function PrivateRoute({ element, requiredPermission }) {
-    const { isAuthenticated, isLoading, getPermissions } = useKindeAuth();
+    const { isAuthenticated, isLoading, getPermissions} = useKindeAuth();
+    
     const [permissions, setPermissions] = useState([]);
+    const [loadingPermissions, setLoadingPermissions] = useState(true);
 
     useEffect(() => {
         const fetchPermissions = async () => {
             try {
                 const { permissions: userPermissions } = await getPermissions();
+                console.log("User Permissions:", userPermissions);
                 setPermissions(userPermissions || []);
+                setLoadingPermissions(false);
             } catch (error) {
                 console.error("Error fetching permissions:", error);
+                setLoadingPermissions(false);
             }
         };
         fetchPermissions();
     }, [getPermissions]);
 
-    if (isLoading) return <p>Loading...</p>;
+    if (isLoading || loadingPermissions) return <p>Loading...</p>;
 
     if (!isAuthenticated) return <Navigate to="/home" />;
+
+    // Check if user has the required permission
+    if (requiredPermission && !permissions.includes(requiredPermission)) {
+        return <Navigate to="/unauthorized" />;
+    }
 
     return element;
 }
@@ -60,7 +71,12 @@ const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Welcome />
+                element: <PrivateRoute element={<Welcome />} requiredPermission="manage_gyms" /> // Admin dashboard
+            },
+            {
+                path:'customer-dashboard',
+                element:<PrivateRoute element={<CustomerDashboard/>}
+                requiredPermission="view-gyms"/>
             },
             {
                 path: "add-gym",
@@ -130,7 +146,7 @@ const router = createBrowserRouter([
                 requiredPermission="view-gyms" />
             },
             {
-                path:"confirm-payment/:bookingId",
+                path:"confirm-payment/:orderId",
                 element: <PrivateRoute element={<Confirm/>}
                 requiredPermission="view-gyms"/>
                 
@@ -138,6 +154,11 @@ const router = createBrowserRouter([
             {
                 path:"customer-history",
                 element:<PrivateRoute element={<CustomerHistory/>}
+                requiredPermission="manage_gyms"/>
+            },
+            {
+                path:"admin-user-filtter",
+                element:<PrivateRoute element={<AdminUserFiltter/>}
                 requiredPermission="manage_gyms"/>
             }
 
@@ -153,4 +174,4 @@ function App() {
     );
 }
 
-export default App;
+export default App; 

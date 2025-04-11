@@ -5,6 +5,8 @@ const userSchema = new mongoose.Schema({
     lastName:String,
     email:{type:String, unique:true, required: true},
     kindeId: String,
+    role:String,
+    orgCode: String,
 })
 
 const User = mongoose.model("User", userSchema);

@@ -22,15 +22,20 @@ function AddMember() {
     
 
 
-    const inputHandler = (e)=>{
-        const {name, value} = e.target;
-
-        if(name === "number"){
-            if (!/^\d{0,10}$/.test(value)) return;
-          }
-        setUser({...user, [name]: value})
+    const inputHandler = (e) => {
+        const { name, value } = e.target;
+    
         
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
+        if (name === "number") {
+            if (!/^\d{0,10}$/.test(value)) return;
+        } else if (name === "email") {
+            if (!emailRegex.test(value)) return;  
+        }   
+        setUser({ ...user, [name]: value });
     }
+    
 
     const submitForm = async (e) => {
         e.preventDefault();
@@ -74,10 +79,10 @@ function AddMember() {
 
     return (
        <>
-         <div className="min-h-screen flex items-center justify-center bg-green-100">
+         <div className="min-h-screen flex items-center justify-center">
             <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
                 <button
-                    className="mb-4 bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600 transition cursor-pointer"
+                    className="mb-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition cursor-pointer"
                     onClick={() => navigate(`/gymdetails/${gymId}`)}
                 >
                     Back To Page
@@ -155,7 +160,7 @@ function AddMember() {
                     <div className="flex justify-center">
                         <button
                             type="submit"
-                            className="bg-indigo-300 text-white w-full py-2 rounded-lg hover:bg-indigo-500 transition cursor-pointer"
+                            className="bg-[#D1E7DD] text-white w-full py-2 rounded-lg hover:bg-[#6B8E7B] transition cursor-pointer"
                         >
                             Add
                         </button>

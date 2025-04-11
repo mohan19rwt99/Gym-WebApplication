@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { useKindeAuth } from '@kinde-oss/kinde-auth-react'
-import { useParams } from 'react-router-dom';
+
 
 function BookSession() {
   const [history, setHistory] = useState([])
   const { getToken } = useKindeAuth();
 
-
+  // get Booking History of Customer
   useEffect(() => {
     const getHistory = async () => {
       try {
@@ -30,7 +30,6 @@ function BookSession() {
       <div className='container mx-auto p-4'>
         <h1 className='text-center mb-5 text-2xl font-bold'>Booking History</h1>
 
-
         <div className="relative overflow-x-auto">
           <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -46,6 +45,9 @@ function BookSession() {
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Plan
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Payment Status
                 </th>
               </tr>
             </thead>
@@ -73,6 +75,9 @@ function BookSession() {
                   </td>
                   <td className="px-6 py-4">
                     {booking.selectedPlan}
+                  </td>
+                  <td className="px-6 py-4">
+                    {booking.status}
                   </td>
                 </tr>
               )

@@ -21,7 +21,7 @@ const Layout = () => {
     }, [getPermissions]);
 
     return (
-        <div className="flex min-h-screen bg-green-100">
+        <div className="flex min-h-screen bg-[#F5F5DC]">
             <Sidebar permissions={permissions} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
             <div className={`flex-1 h-screen overflow-y-auto p-6 ${isCollapsed ? 'pl-20' : 'pl-64'} transition-all duration-300`}>
                 <Outlet />

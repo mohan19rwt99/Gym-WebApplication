@@ -12,27 +12,39 @@ const BrowseGyms = () => {
 
   const { getToken } = useKindeAuth();
 
+  // fetch Gym Details and booking according the city and date
   const fetchGyms = async () => {
     if (!city.trim()) {
-      return alert("please enter a city name")
+      return alert("Please enter a city name");
     }
+  
     try {
       const token = await getToken();
-      const response = await axios.get(`http://localhost:4000/api/getGymCity?city=${city}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Response to get Gym", response.data);
-      setGyms(response.data);
-      setSearched(true)
+      const response = await axios.get(
+        `http://localhost:4000/api/getGymCity?city=${city}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      if (response.data.length === 0) {
+        setGyms([]);       // Clear gyms
+        setSearched(true); // Set searched to show "No gym found"
+      } else {
+        setGyms(response.data);
+        setSearched(true);
+      }
     } catch (error) {
       console.error("Error fetching gyms:", error);
-      setSearched(false)
-      toast.error("City is Not Found")
+      setGyms([]);         // Clear gyms on error too
+      setSearched(true);   // Still set searched so message appears
+      toast.error("City not found");
     }
   };
-
+  
+  // handle Booking Button for going to next page
   const handleBookingDetails = (gymId)=>{
-    navigate(`/BookDetails/${gymId}`)
+    navigate(`/BookDetails/${gymId}`)    
   }
 
   return (

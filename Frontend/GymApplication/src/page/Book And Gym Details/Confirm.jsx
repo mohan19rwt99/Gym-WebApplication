@@ -1,124 +1,70 @@
-import { useKindeAuth } from '@kinde-oss/kinde-auth-react';
-import axios from 'axios';
-import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const Confirm = () => {
-  const { bookingId } = useParams();
-  const { getToken, user } = useKindeAuth();
-  const navigate = useNavigate();
+  const { orderId } = useParams();
   const [paymentDetails, setPaymentDetails] = useState(null);
-  const [bookingDetails, setBookingDetails] = useState(null)
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchPaymentDetails = async (req, res) => {
+    const verifyAndFetch = async () => {
       try {
-        const token = await getToken();
-        const response = await axios.get(`http://localhost:4000/api/getPaymentDetails/${user?.id}/${bookingId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setPaymentDetails(response.data.paymentDetails);
-        console.log("Payment Details", response.data.paymentDetails)
-        setBookingDetails(response.data.paymentDetails);
-      } catch (error) {
-        console.log("Errro fetching Details", error)
-      }
+        const res = await axios.get(`http://localhost:4000/api/verify-payment/${orderId}`);
+        console.log("Verification Response:", res.data);
 
-    }
-    fetchPaymentDetails();
-  }, [getToken, user?.id, bookingId])
-  
-  const handleBack = () => {
-    navigate(-1);
+        const response = await axios.get(`http://localhost:4000/api/getPaymentByOrderId/${orderId}`);
+
+        const details = response.data.paymentDetails
+
+        if (details.status == "CANCELLED" || details.status == "cancelled" || details.status == "failed") {
+          setError("Your Payment was Cancelled")
+        } else {
+          setPaymentDetails(details);
+        }
+      } catch (err) {
+        console.error("Error verifying or fetching payment:", err?.response?.data || err.message);
+        setError("Something went wrong while verifying your payment.");
+      }
+    };
+
+    if (orderId) verifyAndFetch();
+  }, [orderId]);
+
+  if (error) {
+    return (
+      <div className="max-w-md mx-auto mt-10 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative shadow">
+      <strong className="font-bold">Oops! </strong>
+      <span className="block sm:inline ml-2">{error}</span>
+    </div>
+    )
+    
   }
+  if (!paymentDetails) return(
+    <div className="max-w-md mx-auto mt-10 text-center text-gray-600">
+      Loading payment details...
+    </div>
+  )
 
   return (
-    <>
-      <div className='container mx-auto p-6'>
-        <button onClick={handleBack}
-          className="mb-6 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 transition cursor-pointer">
-          Back
-        </button>
-        <h1 className='text-3xl font-bold text-center mb-6'>Your Payment is Confirm</h1>
-        {/* Payments Details */}
-        {paymentDetails && (
-          <div className='relative overflow-x-auto'>
-            <h1 className='text-2xl font-bold'>{paymentDetails.gymNames}</h1>
-              <table className='w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400'>
-                  <thead className='text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400'>
-                      <tr>
-                        <th scope="col" className='px-6 py-3'>
-                            Booking Information   
-                        </th>
-                        <th scope="col" className='px-6 py-3'>
-                            Details
-                        </th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                    <tr className='bg-white border-b hover:bg-gray-50'>
-                      <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
-                        Booking Date
-                      </th>
-                      <td className='px-6 py-4'>{new Date(paymentDetails.startDate).toLocaleDateString('en-IN',{
-                        day:'2-digit',
-                        month:'2-digit',
-                        year:'numeric',
-                        timeZone:'Asia/Kolkata'
-                      })}</td>
-                    </tr>
-                  </tbody>
-                      {/* // Selected Plan */}
-                  <tbody>
-                    <tr className='bg-white border-b hover:bg-gray-50'>
-                      <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
-                        MemberShip type
-                      </th>
-                      <td className='px-6 py-4'>{paymentDetails.selectedPlan}</td>
-                    </tr>
-                  </tbody>
-
-                    {/* Amount paid */}
-                  <tbody>
-                    <tr className='bg-white border-b hover:bg-gray-50'>
-                      <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
-                        Amount Paid
-                      </th>
-                      <td className='px-6 py-4'>₹{paymentDetails.amount}</td>
-                    </tr>
-                  </tbody>
-
-                    {/* Staus of amount paid */}
-                  <tbody>
-                    <tr className='bg-white border-b hover:bg-gray-50'>
-                      <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
-                        Payment Status
-                      </th>
-                      <td className='px-6 py-4'><span className='px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full'>{paymentDetails.status}</span></td>
-                    </tr>
-                  </tbody>
-
-                  {/* Payment Date */}
-                  <tbody>
-                    <tr className='bg-white border-b hover:bg-gray-50'>
-                      <th scope='row' className='px-6 py-4 font-medium text-gray-900 whitespace-nowrap'>
-                        Payment Date
-                      </th>
-                      <td className='px-6 py-4'>{new Date(paymentDetails.startDate).toLocaleDateString('en-IN',{
-                        day:'2-digit',
-                        month:'2-digit',
-                        year:'numeric',
-                        timeZone:'Asia/Kolkata'
-                      })}</td>
-                    </tr>
-                  </tbody>
-                  
-              </table>
-          </div>
-        )}
+    <div className="max-w-md mx-auto mt-10 bg-white shadow-xl p-6 rounded-xl border border-gray-200">
+      <h2 className="text-2xl font-semibold text-green-600 mb-4">Payment Successful</h2>
+      <div className="text-gray-700 space-y-2 transform transition duratioin-300 ease-in-out hover:scale-105 hover:shadow-xl bg-white p-6 rounded-lg">
+        <p><strong>User Name:</strong> {paymentDetails.buyer_name}</p>
+        <p><strong>Booking ID:</strong> {paymentDetails._id}</p>
+        {/* <p><strong>Order ID:</strong> {paymentDetails.orderId}</p> */}
+        <p><strong>Gym:</strong> {paymentDetails.gymNames}</p>
+        <p><strong>Plan:</strong> {paymentDetails.selectedPlan}</p>
+        <p><strong>Amount:</strong> ₹{paymentDetails.amount}</p>
+        <p><strong>Status:</strong> {paymentDetails.status}</p>
+        <p><strong>Phone:</strong> {paymentDetails.phone}</p>
+        <p><strong>Email:</strong> {paymentDetails.email}</p>
+        <p><strong>Start Date:</strong> {new Date(paymentDetails.startDate).toLocaleDateString()}</p>
+        <p><strong>End Date:</strong> {new Date(paymentDetails.endDate).toLocaleDateString()}</p>
+        <p><strong>Transaction ID:</strong> {paymentDetails.transactionId || "Not available yet"}</p>
       </div>
-    </>
-  )
-}
+    </div>
+  );
+};
 
-export default Confirm
+export default Confirm;

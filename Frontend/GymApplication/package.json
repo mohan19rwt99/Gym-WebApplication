@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.5",
     "@kinde-oss/kinde-auth-react": "^5.0.2",
     "@react-google-maps/api": "^2.20.6",
     "@tailwindcss/vite": "^4.0.10",
     "@tanstack/react-table": "^8.21.2",
     "@tomtom-international/web-sdk-maps": "^6.25.0",
     "axios": "^1.8.4",
+    "dotenv": "^16.4.7",
     "leaflet": "^1.9.4",
     "react": "^19.0.0",
     "react-data-table-component": "^7.7.0",

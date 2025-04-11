@@ -11,7 +11,7 @@ const CallbackPage = () => {
         console.log("CallbackPage - user:", user);
 
         if (isAuthenticated) {
-            navigate('/welcome');
+            navigate('/');
         } else {
             navigate('/home');
         }
