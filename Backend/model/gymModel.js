@@ -54,10 +54,17 @@ const gymSchema = new mongoose.Schema({
         }
       },
     currency: {
+      name:{
         type: String,
         required: true,
         enum: ['INR', 'USD', 'EUR', 'GBP', 'JPY', 'RUB', 'KRW'],
         default: 'INR'
+      },
+      symbol:{
+        type:String,
+        required:true,
+        defualt:'₹',
+      }
     },
     description: {
         type: String,

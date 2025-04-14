@@ -157,7 +157,10 @@ const NewGymAdd = () => {
 
     const data = {
       ...formData,
-      currency,
+      currency:{
+        name:currency,
+        symbol: currencySymbols[currency],
+      },
       coordinates: position,
       pricing: {
         hourlyRate: parseNumber(formData.hourlyRate),

@@ -86,6 +86,8 @@ const AddGym = () => {
       name: "Location",
       selector: (row) => `${row.address.street}, ${row.address.location}`,
       sortable: true,
+      wrap:true,
+      width:"200px"
     }, {
       name: "Pricing (Hourly/Weekly/Monthly)",
       selector: (row) =>
@@ -146,15 +148,17 @@ const AddGym = () => {
 
         {/* Using DataTable */}
 
-        <div className="mt-6 bg-white shadow-md rounded p-4 max-h-96 overflow-auto">
+        <div className="mt-6 bg-white shadow-md rounded p-4" style={{minHeight:gyms.length ? "auto" : "200px"}}>
           <h2 className="text-2xl font-bold mb-2">Gym List</h2>
+          <div className="overflow-x-auto">
           <DataTable
             columns={columns}
             data={gyms}
             progressPending={loading} // Shows spinner while loading
             pagination
             highlightOnHover
-            striped          />
+            striped/>
+          </div>
         </div>
 
       </div>

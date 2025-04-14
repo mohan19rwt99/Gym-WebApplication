@@ -9,6 +9,7 @@ const paymentSchema = new mongoose.Schema({
     phone: String,
     selectedPlan: String,
     amount: Number,
+    currency:{type:String, default: "INR"},
     status: { type: String, default: "pending" },
     transactionId: { type: String, default: null },
     startDate: Date,

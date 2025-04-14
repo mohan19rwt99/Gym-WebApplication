@@ -3,37 +3,6 @@ import Payment from '../model/booking.js';
 
 // Add Gym
 
-// export const addGym = async (req, res) => {
-//   try {
-
-//     const { gymName, address, pricing, personalTrainerPricing, morningOpeningTime, morningClosingTime, eveningOpeningTime, eveningClosingTime, description } = req.body;
-//     const ownerId = req.user?.id;
-//     if (!gymName || !address || !address.street || !pricing || !personalTrainerPricing || !morningOpeningTime || morningClosingTime || eveningOpeningTime || eveningClosingTime) {
-//       return res.status(400).json({ message: "Please fill all required fields" });
-//     }
-
-//     const newGym = new GymAdd({
-//       gymName,
-//       address,
-//       pricing,
-//       personalTrainerPricing,
-//       morningOpeningTime, 
-//       morningClosingTime, 
-//       eveningOpeningTime, 
-//       eveningClosingTime,
-//       description,
-//       gymOwner: ownerId,
-//     });
-//     console.log("street is", newGym)
-//     const savedGym = await newGym.save();
-//     res.status(201).json({ message: "Gym added successfully", gym: savedGym });
-
-//   } catch (error) {
-//     console.error("Error adding gym:", error);
-//     res.status(500).json({ message: "Server error while adding gym", error: error.message });
-//   }
-// };
-
 export const addGym = async (req, res) => {
   try {
       const {
@@ -46,6 +15,28 @@ export const addGym = async (req, res) => {
           currency,
           description
       } = req.body;
+      
+
+      const currencySymbols = {
+        INR: "₹",
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      JPY: "¥",
+      RUB: "₽",
+      KRW: "₩",
+      }
+
+      if(!currency ||!currency.name || !currencySymbols[currency.name]){
+        throw new Error('Invalid or missing currency Name')
+      }
+
+      const currencyWithSymbol = {
+        name: currency.name,
+        symbol: currency.symbol || currencySymbols[currency.name]
+      }
+
+      console.log("currency with Symbol", currencyWithSymbol)
 
       const newGym = await GymAdd.create({
           gymName,
@@ -54,7 +45,7 @@ export const addGym = async (req, res) => {
           pricing,
           personalTrainerPricing,
           timings,
-          currency,
+          currency: currencyWithSymbol,
           description,
           gymOwner: req.user.id // or however you store owner info
       });
@@ -103,24 +94,28 @@ export const getGym = async (req, res) => {
 // get Gym for City
 export const getGymCity = async (req, res) => {
   try {
-    const { city } = req.query;
-    if (!city) {
-      return res.status(400).json({ message: "City parameter is required" });
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ message: "Query parameter is required" });
     }
 
-    const gyms = await GymAdd.find({ "address.location": { $regex: city, $options: "i" } })
-      .populate("gymOwner", "name email");
+    const gyms = await GymAdd.find({
+      $or: [
+        { gymName: { $regex: query, $options: "i" } },
+        { "address.location": { $regex: query, $options: "i" } },
+      ],
+    });
 
     if (!gyms.length) {
-      return res.status(404).json({ message: "No gyms found in this city." });
+      return res.status(404).json({ message: "No gyms found." });
     }
 
     res.status(200).json(gyms);
   } catch (error) {
-    console.error("Error fetching gyms:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
 
 // getSingleIdGym
 export const getSingleGym = async (req, res) => {
@@ -243,3 +238,40 @@ export const dashboardAdmin = async (req, res) => {
   }
 };
 
+
+
+export const getNearbyGyms = async (req, res)=>{
+  try {
+    const {lat, lng} = req.query;
+
+    if(!lat || !lng){
+        return res.status(400).json({message:"Lattitude and Longitude is required"})
+    }
+
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lng);
+
+    // Geospatial query for nearby gyms
+    const gyms = await GymAdd.find({
+      coordinates: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [longitude, latitude]
+          },
+          $maxDistance: 3000
+        }
+      }
+    }).populate("gymOwner", "name email");
+
+    console.log("gymsn found or not", gyms)
+
+    if(!gyms.length){
+      return res.status(404).json({message:"NO Gyms Found Near By"})
+    }
+    res.status(200).json(gyms)
+  } catch (error) {
+    console.error("Error fetching nearby gyms:", error);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
+  }
+}

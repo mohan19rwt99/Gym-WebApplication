@@ -26,10 +26,11 @@ export const createPayment = async (req, res) => {
       startDate,
       endDate,
       gymNames,
+      currency,
     } = req.body;
 
     const userId = req.user?.sub;
-    const buyer_name = req.user?.given_name || req.user?.name || "Gym User"; // 👈 Real user name from Kinde
+    const buyer_name = req.user?.given_name || req.user?.name || "Gym User"; // Real user name from Kinde
 
     if (!userId || !email || !phone || !gymId || !selectedPlan) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -40,7 +41,7 @@ export const createPayment = async (req, res) => {
     const payload = {
       order_id: orderId,
       order_amount: amount,
-      order_currency: "INR",
+      order_currency: "INR", // Testing
       customer_details: {
         customer_id: userId,
         customer_email: email,
@@ -72,6 +73,7 @@ export const createPayment = async (req, res) => {
       phone,
       selectedPlan,
       amount,
+      currency,
       status: "pending",
       startDate,
       endDate,
@@ -126,6 +128,7 @@ export const verifyPayment = async (req, res) => {
 
     paymentRecord.status = "successful";
     paymentRecord.transactionId = orderData.cf_order_id;
+    paymentRecord.currency = orderData.order_currency;
     await paymentRecord.save();
 
     res.status(200).json({
@@ -149,7 +152,7 @@ export const handleCashfreeWebhook = async (req, res) => {
   try {
     console.log("Cashfree Webhook Received:", req.body);
 
-    const { order_id, order_status, payment_id } = req.body;
+    const { order_id, order_status, payment_id, order_currency } = req.body;
 
     if (!order_id || !order_status) {
       return res.status(400).json({ message: "Invalid data from Cashfree" });
@@ -164,6 +167,7 @@ export const handleCashfreeWebhook = async (req, res) => {
       {
         status: updatedStatus,
         transactionId: payment_id || null,
+        currency: order_currency || "INR", // Save currency from webhook
       },
       { new: true }
     );

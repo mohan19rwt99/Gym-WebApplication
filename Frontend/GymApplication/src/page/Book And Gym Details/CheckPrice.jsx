@@ -28,10 +28,12 @@ const CheckPrice = () => {
         const res = await axios.get(`http://localhost:4000/api/getSingleGym/${gymId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log("get Single gym", res.data)
 
         setPrice({
           pricing: res.data.pricing || {},
-          personalTrainerPricing: res.data.personalTrainerPricing || {}
+          personalTrainerPricing: res.data.personalTrainerPricing || {},
+          currency:res.data.currency || { symbol: "₹" }
         });
         setGymName(res.data.gymName || "Unknown Gym");
       } catch (error) {
@@ -126,6 +128,7 @@ const CheckPrice = () => {
           gymId,
           selectedPlan,
           amount: rate,
+          currency: "INR",
           startDate,
           endDate,
           gymNames: gymName,
@@ -166,17 +169,17 @@ const CheckPrice = () => {
       {price?.pricing && price?.personalTrainerPricing ? (
         <div className="flex flex-wrap justify-center gap-8 mt-8">
           {[
-            { name: "Hourly Plan", rate: price?.pricing?.hourlyRate, duration: "hour" },
-            { name: "Hourly Plan With Trainer", rate: price?.personalTrainerPricing?.hourlyRate, duration: "hour" },
-            { name: "Weekly Plan", rate: price?.pricing?.weeklyRate, duration: "week" },
-            { name: "Weekly Plan With Trainer", rate: price?.personalTrainerPricing?.weeklyRate, duration: "week" },
-            { name: "Monthly Plan", rate: price?.pricing?.monthlyRate, duration: "month" },
-            { name: "Monthly Plan With Trainer", rate: price?.personalTrainerPricing?.monthlyRate, duration: "month" }
+            { name: "Hourly Plan",symbol:price?.currency?.symbol, rate: price?.pricing?.hourlyRate, duration: "hour" },
+            { name: "Hourly Plan With Trainer", symbol:price?.currency?.symbol, rate: price?.personalTrainerPricing?.hourlyRate, duration: "hour" },
+            { name: "Weekly Plan",symbol:price?.currency?.symbol, rate: price?.pricing?.weeklyRate, duration: "week" },
+            { name: "Weekly Plan With Trainer",symbol:price?.currency?.symbol, rate: price?.personalTrainerPricing?.weeklyRate, duration: "week" },
+            { name: "Monthly Plan",symbol:price?.currency?.symbol, rate: price?.pricing?.monthlyRate, duration: "month" },
+            { name: "Monthly Plan With Trainer",symbol:price?.currency?.symbol, rate: price?.personalTrainerPricing?.monthlyRate, duration: "month" }
           ].map((plan) => (
             <div key={plan.name} className="w-full sm:w-1/3 bg-white shadow-lg rounded-lg p-6 border border-gray-200">
               <h3 className="text-xl font-bold">{plan.name}</h3>
               <p className="text-gray-600 mt-2">Access to gym facilities</p>
-              <p className="text-3xl font-bold mt-4">₹{plan.rate}/{plan.duration}</p>
+              <p className="text-3xl font-bold mt-4">{plan.symbol}{plan.rate}/{plan.duration}</p>
               <button
                 onClick={() => handlePlanSelect(plan.name)}
                 className="text-black border border-black px-3 py-2 rounded hover:bg-black hover:text-white transition mt-5 cursor-pointer"

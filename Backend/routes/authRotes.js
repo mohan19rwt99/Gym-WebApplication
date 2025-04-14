@@ -1,7 +1,7 @@
 import express from "express"
 // import requireAuth from "./middlewear.js"
 import { registerOrLoginUser, getUserByEmail } from "../controller/authController.js"
-import { addGym, getGym, getGymCity ,updateGym, deleteGym,getSingleGym, dashboardAdmin } from "../controller/gymAddController.js"
+import { addGym, getGym, getGymCity ,updateGym, deleteGym,getSingleGym, dashboardAdmin, getNearbyGyms } from "../controller/gymAddController.js"
 import { addStaff, deleteStaff, getStaff, staffId, updateStaff } from "../controller/staffMember.js";
 import { protectRoute,getUser } from "@kinde-oss/kinde-node-express";
 import { createPayment, verifyPayment, handleCashfreeWebhook, getPaymentDetails,getPaymentByOrderId , getUserBookingHistory, getOwnerBookings, adminUserDetails, userBookingDashboard, checkActiveBooking } from "../controller/cashfree.js";
@@ -21,6 +21,9 @@ router.get("/getGymCity", protectRoute, getUser, getGymCity)
 router.get("/getSingleGym/:id",protectRoute,getUser, getSingleGym)
 router.put("/updateGym/:id",protectRoute,getUser, updateGym);
 router.delete("/deleteGym/:id", protectRoute,getUser ,deleteGym);
+
+// Gym fetch According Current Location
+router.get("/nearby-gyms",protectRoute,getUser,getNearbyGyms)
 
 // dashboard data fetch for Admin
 router.get("/dashboard-stats", protectRoute,getUser,dashboardAdmin)

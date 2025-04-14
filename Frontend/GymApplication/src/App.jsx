@@ -67,24 +67,23 @@ const router = createBrowserRouter([
 
     {
         path: "/",
-        element: <Layout />,
+        element: <Layout />, // Keep layout for shared components
         children: [
             {
                 index: true,
-                element: <PrivateRoute element={<Welcome />} requiredPermission="manage_gyms" /> // Admin dashboard
+                element: <CallbackPage /> // Dynamically redirect based on role
             },
             {
-                path:'customer-dashboard',
-                element:<PrivateRoute element={<CustomerDashboard/>}
-                requiredPermission="view-gyms"/>
+                path: "customer-dashboard",
+                element: <PrivateRoute element={<CustomerDashboard />} requiredPermission="view-gyms" />
             },
             {
                 path: "add-gym",
-                element: <AddGym />
+                element: <PrivateRoute element={<AddGym />} requiredPermission="manage_gyms" />
             },
             {
                 path: "gymdetails/:id",
-                element: <GymDetails />
+                element: <PrivateRoute element={<GymDetails />} requiredPermission="view-gyms" />
             },
             {
                 path: "addmember",
@@ -108,7 +107,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "gym-list",
-                element: <GymList />
+                element: <PrivateRoute element={<GymList />} requiredPermission="view-gyms" />
             },
             {
                 path: "manage-staff",
@@ -136,32 +135,24 @@ const router = createBrowserRouter([
             },
             {
                 path: "BookDetails/:gymId",
-                element: <PrivateRoute element={<BookDetails />}
-                    requiredPermission="view-gyms" />
+                element: <PrivateRoute element={<BookDetails />} requiredPermission="view-gyms" />
             },
-
             {
                 path: "CheckPrice/:gymId",
-                element: <PrivateRoute element={<CheckPrice />}
-                requiredPermission="view-gyms" />
+                element: <PrivateRoute element={<CheckPrice />} requiredPermission="view-gyms" />
             },
             {
-                path:"confirm-payment/:orderId",
-                element: <PrivateRoute element={<Confirm/>}
-                requiredPermission="view-gyms"/>
-                
+                path: "confirm-payment/:orderId",
+                element: <PrivateRoute element={<Confirm />} requiredPermission="view-gyms" />
             },
             {
-                path:"customer-history",
-                element:<PrivateRoute element={<CustomerHistory/>}
-                requiredPermission="manage_gyms"/>
+                path: "customer-history",
+                element: <PrivateRoute element={<CustomerHistory />} requiredPermission="manage_gyms" />
             },
             {
-                path:"admin-user-filtter",
-                element:<PrivateRoute element={<AdminUserFiltter/>}
-                requiredPermission="manage_gyms"/>
+                path: "admin-user-filtter",
+                element: <PrivateRoute element={<AdminUserFiltter />} requiredPermission="manage_gyms" />
             }
-
         ]
     }
 ]);
