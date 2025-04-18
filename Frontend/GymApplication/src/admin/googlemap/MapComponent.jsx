@@ -12,7 +12,7 @@ function MapComponent({ position, setPosition, setFormData }) {
   const [address, setAddress] = useState('');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [street, setStreet] = useState('');
-
+  
   const getAddressFromCoordinates = (lat, lng) => {
     const geocoder = new window.google.maps.Geocoder();
     geocoder.geocode({ location: { lat, lng } }, (results, status) => {
@@ -141,10 +141,12 @@ function MapComponent({ position, setPosition, setFormData }) {
       <div className="mb-4">
         <input
           type="text"
+          name="street"
           placeholder="Extra Info (Landmark, Floor, etc)"
           value={street}
           onChange={handleStreetChange}
           className="w-full p-2 border border-gray-300 rounded"
+          maxLength={50}
         />
       </div>
 

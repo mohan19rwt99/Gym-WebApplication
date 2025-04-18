@@ -14,7 +14,7 @@ const Sidebar = ({ permissions, isCollapsed, setIsCollapsed }) => {
 
     return (
         <div className={`bg-[#333333] text-white flex flex-col p-4 h-screen fixed top-0 left-0 
-                        ${isCollapsed ? 'w-20' : 'w-64'} transition-all duration-300 overflow-hidden`}>
+                        ${isCollapsed ? 'w-20' : 'w-54'} transition-all duration-300 overflow-hidden`}>
 
             <div
                 className="cursor-pointer mb-6 text-white"
@@ -73,7 +73,7 @@ const Sidebar = ({ permissions, isCollapsed, setIsCollapsed }) => {
                             >
                                 <MdList size={24} className="mr-3" />
                                 <span className={`whitespace-nowrap ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'} transition-opacity duration-200 delay-100`}>
-                                    Today Schedule
+                                    Schedule
                                 </span>
                             </li>
                         </>

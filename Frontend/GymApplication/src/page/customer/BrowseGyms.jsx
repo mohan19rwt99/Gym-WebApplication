@@ -30,38 +30,6 @@ const BrowseGyms = () => {
     googleMapsApiKey: "AIzaSyC8dQaD5ZNlJnsPydXHDpJLv7usOU1LM_Q",
   });
 
-  // Fetch nearby gyms based on geolocation
-  const fetchGyms = async (lat, lng) => {
-    try {
-      const token = await getToken();
-      const response = await axios.get(
-        `http://localhost:4000/api/nearby-gyms?lat=${lat}&lng=${lng}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("response for location". response.data)
-
-      const data = response.data;
-      if (data.length === 0) {
-        setGyms([]);
-        setSearched(true);
-        toast.error("No gyms found");
-      } else {
-        setGyms(data);
-        setMapCenter({
-          lat: data[0].coordinates?.lat || 28.6139,
-          lng: data[0].coordinates?.lng || 77.209,
-        });
-        setSearched(true);
-      }
-    } catch (error) {
-      console.error("Error fetching gyms:", error);
-      setGyms([]);
-      setSearched(true);
-      toast.error("Error fetching gyms");
-    }
-  };
 
   // Fetch gyms based on the city or gym name
   const fetchGymsByQuery = async () => {
@@ -70,7 +38,7 @@ const BrowseGyms = () => {
     try {
       const token = await getToken();
       const response = await axios.get(
-        `http://localhost:4000/api/getGymCity?query=${query}`,
+        `http://localhost:4000/api/get-gym-city?query=${query}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -118,7 +86,7 @@ const BrowseGyms = () => {
   }, []);
 
   const handleBookingDetails = (gymId) => {
-    navigate(`/BookDetails/${gymId}`);
+    navigate(`/book-details/${gymId}`);
   };
 
   return (

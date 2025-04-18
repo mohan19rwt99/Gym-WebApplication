@@ -62,23 +62,23 @@ const Welcome = () => {
             </h1>
 
             {/* Admin Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full max-w-4xl">
-                <div className="bg-[#D8B4FE] text-white p-6 rounded-lg shadow-md transform transition duration-500 hover:scale-105">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6 w-full max-w-6xl">
+                <div className="bg-[#D8B4FE] text-white p-6 rounded-lg shadow-md transform">
                     <h3 className="text-xl font-semibold">Your Total Gyms</h3>
                     <p className="text-3xl font-bold">{stats.totalGyms.length}</p>
                 </div>
 
-                <div className="bg-[#A5B4FC] text-white p-6 rounded-lg shadow-md transform transition duration-500 hover:scale-105">
+                <div className="bg-[#A5B4FC] text-white p-6 rounded-lg shadow-md transform">
                     <h3 className="text-xl font-semibold">Total Customers</h3>
                     <p className="text-3xl font-bold">{stats.totalCustomers}</p>
                 </div>
 
-                <div className="bg-green-300 text-white p-6 rounded-lg shadow-md transform transition duration-500 hover:scale-105">
+                <div className="bg-green-300 text-white p-6 rounded-lg shadow-md transform">
                     <h3 className="text-xl font-semibold">New Customers add today</h3>
                     <p className="text-3xl font-bold">{stats.todayCustomers}</p>
                 </div>
 
-                <div className="bg-yellow-200 text-white p-6 rounded-lg shadow-md transform transition duration-500 hover:scale-105">
+                <div className="bg-yellow-200 text-white p-6 rounded-lg shadow-md transform">
                     <h3 className="text-xl font-semibold">Active Customers</h3>
                     <p className="text-3xl font-bold">{stats.activeCustomers}</p>
                 </div>

@@ -70,6 +70,10 @@ const router = createBrowserRouter([
         element: <Layout />, // Keep layout for shared components
         children: [
             {
+                path: "welcome",
+                element: <PrivateRoute element={<Welcome />} requiredPermission="manage_gyms" />
+            },
+            {
                 index: true,
                 element: <CallbackPage /> // Dynamically redirect based on role
             },
@@ -83,7 +87,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "gymdetails/:id",
-                element: <PrivateRoute element={<GymDetails />} requiredPermission="view-gyms" />
+                element: <PrivateRoute element={<GymDetails />} requiredPermission="manage_gyms" />
             },
             {
                 path: "addmember",
@@ -98,16 +102,16 @@ const router = createBrowserRouter([
                 element: <PrivateRoute element={<EditStaff />} requiredPermission="manage_gyms" />
             },
             {
-                path: "newGymAdd",
+                path: "new-gym-add",
                 element: <PrivateRoute element={<NewGymAdd />} requiredPermission="manage_gyms" />
             },
             {
-                path: "editGym/:id",
+                path: "edit-gym/:id",
                 element: <PrivateRoute element={<EditGym />} requiredPermission="manage_gyms" />
             },
             {
                 path: "gym-list",
-                element: <PrivateRoute element={<GymList />} requiredPermission="view-gyms" />
+                element: <PrivateRoute element={<GymList />} requiredPermission="manage_gyms" />
             },
             {
                 path: "manage-staff",
@@ -134,11 +138,11 @@ const router = createBrowserRouter([
                 element: <Navigate to="/unauthorized" />
             },
             {
-                path: "BookDetails/:gymId",
+                path: "book-details/:gymId",
                 element: <PrivateRoute element={<BookDetails />} requiredPermission="view-gyms" />
             },
             {
-                path: "CheckPrice/:gymId",
+                path: "check-price/:gymId",
                 element: <PrivateRoute element={<CheckPrice />} requiredPermission="view-gyms" />
             },
             {

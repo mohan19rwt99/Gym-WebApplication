@@ -16,8 +16,9 @@ const Logout = ({isCollapsed}) => {
          <button
             onClick={handleLogout}
 
-            className={`w-full text-white font-semibold py-2 px-4 rounded bg-red-600 hover:bg-red-700 flex items-center justify-center transition-all duration-200 cursor-pointer
+            className={`w-full text-white font-small py-1.5 px-2 rounded bg-purple-400 hover:bg-purple-700 flex items-center justify-center transition-all duration-300 cursor-pointer
             ${isCollapsed ? 'justify-center' : 'justify-start'} `}
+            style={{fontSize: '14px'}}
         >
             <CiLogout size={24} className={`${isCollapsed ? 'mx-auto' : 'mr-10'}`}/>
             <span className={`${isCollapsed ? 'hidden' : 'block'}`}>Logout</span>

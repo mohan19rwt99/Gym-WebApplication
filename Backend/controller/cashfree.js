@@ -27,6 +27,9 @@ export const createPayment = async (req, res) => {
       endDate,
       gymNames,
       currency,
+      bookingDate,
+      bookingTime,
+
     } = req.body;
 
     const userId = req.user?.sub;
@@ -78,7 +81,11 @@ export const createPayment = async (req, res) => {
       startDate,
       endDate,
       gymNames,
+      bookingDate,
+      bookingTime,
     });
+
+    console.log("New PYAMENT", newPayment)
 
     await newPayment.save();
 
@@ -238,7 +245,7 @@ export const getUserBookingHistory = async (req, res) => {
   }
 }
 
-
+//
 export const getOwnerBookings = async (req, res) => {
   try {
     const ownerId = req.user.id;
@@ -294,12 +301,15 @@ export const adminUserDetails = async (req, res) => {
     }
 
     const bookingDetails = booking.map((bookings) => ({
+      _id:bookings._id,
       userId: bookings.userId,
       gymName: bookings.gymNames,
       selectedPlan: bookings.selectedPlan,
       buyerName: bookings.buyer_name,
       startDate: bookings.startDate.toISOString().split('T')[0],
-      endDate: bookings.endDate.toISOString().split('T')[0]
+      endDate: bookings.endDate.toISOString().split('T')[0],
+      status: bookings.status,
+      visitingTime: bookings.bookingTime || "Not Set"
     }));
 
     console.log("Filtered Booking Details:", bookingDetails);
@@ -385,5 +395,65 @@ export const checkActiveBooking = async (req, res) => {
   } catch (error) {
     console.error("Error checking active booking:", error);
     return res.status(500).json({ message: "Server error", error });
+  }
+}
+
+
+//update Schedule of customer by owner
+
+export const updateVisitingTime = async (req, res)=>{
+  const {userId} = req.params;
+  const {visitingTime} = req.body;
+
+  if(!visitingTime){
+    return res.status(400).json({message:'Visiting Time is required'})
+  }
+  try {
+      const booking = await Payment.findById(userId);
+      if(!booking){
+        return res.status(404).json({message:"Booking Not found"})
+      }
+       //find Gym timing
+       const gym = await GymAdd.findById(booking.gymId)
+       if(!gym || !gym.timings){
+          return res.status(404).json({message:"Gym or timings not found"})
+       }
+
+       const today = new Date();
+       const [hours,minutes] = visitingTime.split(":").map(Number);
+       const visitingMinutes = hours * 60 + minutes;
+
+       const getMinutes = (date)=>{
+          const d = new Date(date);
+          return d.getHours() * 60 + d.getMinutes();
+       }
+
+       const morningStart = getMinutes(gym.timings.morning.openingTime);
+       const morningEnd = getMinutes(gym.timings.morning.closingTime);
+       const eveningStart = getMinutes(gym.timings.evening.openingTime);
+       const eveningEnd = getMinutes(gym.timings.evening.closingTime);
+       
+       // Check if visiting time is within gym timings
+       const isValid =
+         (visitingMinutes >= morningStart && visitingMinutes <= morningEnd) ||
+         (visitingMinutes >= eveningStart && visitingMinutes <= eveningEnd);
+       
+       if (!isValid) {
+         return res.status(400).json({
+           message: `Time ${visitingTime} is outside gym's open hours`,
+         });
+       }
+       
+
+       booking.bookingTime = visitingTime;
+       await booking.save();
+
+       res.status(200).json({
+        message:"visiting Time update Successfully",
+        booking,  
+       })
+  } catch (error) {
+      console.error("Error updating visiting Time", error);
+      res.status(500).json({message:"Internal Server Error"})
   }
 }

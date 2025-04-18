@@ -74,7 +74,22 @@ const gymSchema = new mongoose.Schema({
     gymOwner: {
         type: String,
         required: true
-    }
+    },
+    isDeleted:{
+        type:Boolean,
+        default:false,
+    },
+    images:{
+        url:{type:String, required:true}, 
+        public_id:{type:String, required:true},
+    },
+    amenities: [
+      {
+        id: { type: String, required: true },
+        label: { type: String, required: true },
+        checked: { type: Boolean, required: true },
+      },
+    ],
 }, {
     timestamps: true
 });

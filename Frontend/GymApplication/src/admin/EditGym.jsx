@@ -96,7 +96,6 @@ const EditGym = () => {
       setIsLoading(true);
       try {
         let gym;
-        
         if (location.state?.gym) {
           gym = location.state.gym;
         } else {
@@ -108,7 +107,8 @@ const EditGym = () => {
           });
           gym = response.data;
         }
-
+  
+        // Set all other form data
         setFormData({
           gymName: gym.gymName || "",
           address: {
@@ -128,18 +128,26 @@ const EditGym = () => {
           },
           description: gym.description || ""
         });
-
+  
+        // Set timings
         if (gym.timings?.morning) {
           setMorningOpeningTime(new Date(gym.timings.morning.openingTime));
           setMorningClosingTime(new Date(gym.timings.morning.closingTime));
         }
-
+  
         if (gym.timings?.evening) {
           setEveningOpeningTime(new Date(gym.timings.evening.openingTime));
           setEveningClosingTime(new Date(gym.timings.evening.closingTime));
         }
-
-        if (gym.coordinates) setPosition(gym.coordinates);
+  
+        // Set position - make sure to handle cases where coordinates might be null/undefined
+        if (gym.coordinates && gym.coordinates.lat && gym.coordinates.lng) {
+          setPosition({
+            lat: gym.coordinates.lat,
+            lng: gym.coordinates.lng
+          });
+        }
+  
         if (gym.currency) setCurrency(gym.currency);
       } catch (error) {
         console.error("Error loading gym data:", error);
@@ -148,7 +156,7 @@ const EditGym = () => {
         setIsLoading(false);
       }
     };
-
+  
     fetchGymData();
   }, [id, location.state, getToken]);
 
@@ -177,7 +185,10 @@ const EditGym = () => {
 
     const data = {
       ...formData,
-      currency,
+      currency:{
+          name:currency,
+          symbol:currencySymbols[currency]
+      },
       coordinates: position,
       timings: {
         morning: {
@@ -354,7 +365,11 @@ const EditGym = () => {
                               name="pricing.hourlyRate"
                               id="hourlyRate"
                               value={formData.pricing.hourlyRate}
-                              onChange={handleChange}
+                              onChange={(e)=>{
+                                if(e.target.value.length <= 7){
+                                  handleChange(e);
+                                }
+                              }}
                               className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border"
                               placeholder="0.00"
                               min="0"
@@ -380,7 +395,11 @@ const EditGym = () => {
                               name="pricing.weeklyRate"
                               id="weeklyRate"
                               value={formData.pricing.weeklyRate}
-                              onChange={handleChange}
+                              onChange={(e)=>{
+                                if(e.target.value.length <= 7){
+                                  handleChange(e);
+                                }
+                              }}
                               className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border"
                               placeholder="0.00"
                               min="0"
@@ -406,7 +425,11 @@ const EditGym = () => {
                               name="pricing.monthlyRate"
                               id="monthlyRate"
                               value={formData.pricing.monthlyRate}
-                              onChange={handleChange}
+                              onChange={(e)=>{
+                                if(e.target.value.length <= 7){
+                                  handleChange(e);
+                                }
+                              }}
                               className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border"
                               placeholder="0.00"
                               min="0"
@@ -443,7 +466,11 @@ const EditGym = () => {
                               name="personalTrainerPricing.hourlyRate"
                               id="trainerHourlyRate"
                               value={formData.personalTrainerPricing.hourlyRate}
-                              onChange={handleChange}
+                              onChange={(e)=>{
+                                if(e.target.value.length <= 7){
+                                  handleChange(e);
+                                }
+                              }}
                               className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border"
                               placeholder="0.00"
                               min="0"
@@ -469,7 +496,11 @@ const EditGym = () => {
                               name="personalTrainerPricing.weeklyRate"
                               id="trainerWeeklyRate"
                               value={formData.personalTrainerPricing.weeklyRate}
-                              onChange={handleChange}
+                              onChange={(e)=>{
+                                if(e.target.value.length <= 7){
+                                  handleChange(e);
+                                }
+                              }}
                               className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border"
                               placeholder="0.00"
                               min="0"
@@ -495,7 +526,11 @@ const EditGym = () => {
                               name="personalTrainerPricing.monthlyRate"
                               id="trainerMonthlyRate"
                               value={formData.personalTrainerPricing.monthlyRate}
-                              onChange={handleChange}
+                              onChange={(e)=>{
+                                if(e.target.value.length <= 7){
+                                  handleChange(e);
+                                }
+                              }}
                               className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md p-2 border"
                               placeholder="0.00"
                               min="0"
@@ -608,6 +643,7 @@ const EditGym = () => {
                         position={position}
                         setPosition={setPosition}
                         setFormData={setFormData}
+
                       />
                     </div>
                     <p className="mt-2 text-sm text-gray-500">

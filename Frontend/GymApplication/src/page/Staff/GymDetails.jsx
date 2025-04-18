@@ -73,8 +73,8 @@ const GymDetails = () => {
         <>
             <div className="p-6 bg-white shadow-md rounded-lg max-w-4xl mx-auto my-10">
                 <Link to={"/gym-list"}>
-                    <button className="mt-4 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 cursor-pointer">
-                        Back To Page
+                    <button className="mt-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-800 cursor-pointer duration-300">
+                        Previous Page
                     </button>
                 </Link>
 
@@ -91,7 +91,7 @@ const GymDetails = () => {
                             <Link
                                 to="/addmember"
                                 state={{ gymId: id }}
-                                className="focus:outline-none bg-violet-600 text-white hover:bg-violet-800 px-5 py-2.5 rounded-lg"
+                                className="focus:outline-none bg-purple-400 text-white hover:bg-purple-700 px-5 py-2.5 rounded-lg duration-300"
                             >
                                 Add Staff
                             </Link>

@@ -15,6 +15,7 @@ const CheckPrice = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [gymName, setGymName] = useState('');
+  const [isLoading, setIsLoading] = useState(true); // Add this state
   const location = useLocation();
   const { selectedDate = "", selectedTime = "" } = location.state || {};
   const navigate = useNavigate();
@@ -24,21 +25,24 @@ const CheckPrice = () => {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
+        setIsLoading(true); // Start loading
         const token = await getToken();
         const res = await axios.get(`http://localhost:4000/api/getSingleGym/${gymId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log("get Single gym", res.data)
+        console.log("get Single gym", res.data);
 
         setPrice({
           pricing: res.data.pricing || {},
           personalTrainerPricing: res.data.personalTrainerPricing || {},
-          currency:res.data.currency || { symbol: "₹" }
+          currency: res.data.currency || { symbol: "₹" }
         });
         setGymName(res.data.gymName || "Unknown Gym");
       } catch (error) {
         console.error("Error fetching gym data:", error);
         toast.error("Failed to load pricing.");
+      } finally {
+        setIsLoading(false); // Stop loading
       }
     };
     fetchPrice();
@@ -93,8 +97,8 @@ const CheckPrice = () => {
 
       const checkRes = await axios.get(`http://localhost:4000/api/booking-active/${user?.id}/${gymId}`,  {
         headers: { Authorization: `Bearer ${token}` }
-      })
-      console.log("rescheck", checkRes.data)
+      });
+      console.log("rescheck", checkRes.data);
 
       if (checkRes.data.conflict) {
         const { startDate, endDate } = checkRes.data.booking;
@@ -102,7 +106,6 @@ const CheckPrice = () => {
         setIsModalOpen(false);
         return;
       }
-
 
       let rate;
 
@@ -138,6 +141,8 @@ const CheckPrice = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log("response for send payment in cashfree", res.data)
+
       const sessionId = res.data.paymentSessionId;
 
       // Cashfree Checkout (redirects to Cashfree UI)
@@ -166,34 +171,32 @@ const CheckPrice = () => {
         <p className="max-w-3xl mx-auto mt-4 text-xl">Choose a plan that fits your needs and upgrade anytime.</p>
       </div>
 
-      {price?.pricing && price?.personalTrainerPricing ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center space-x-2 mt-10">
+          <div className="w-5 h-5 bg-[#d991c2] rounded-full animate-bounce"></div>
+          <div className="w-5 h-5 bg-[#9869b8] rounded-full animate-bounce" style={{ animationDelay: '200ms' }}></div>
+          <div className="w-5 h-5 bg-[#6756cc] rounded-full animate-bounce" style={{ animationDelay: '400ms' }}></div>
+        </div>
+      ) : (
         <div className="flex flex-wrap justify-center gap-8 mt-8">
           {[
-            { name: "Hourly Plan",symbol:price?.currency?.symbol, rate: price?.pricing?.hourlyRate, duration: "hour" },
-            { name: "Hourly Plan With Trainer", symbol:price?.currency?.symbol, rate: price?.personalTrainerPricing?.hourlyRate, duration: "hour" },
-            { name: "Weekly Plan",symbol:price?.currency?.symbol, rate: price?.pricing?.weeklyRate, duration: "week" },
-            { name: "Weekly Plan With Trainer",symbol:price?.currency?.symbol, rate: price?.personalTrainerPricing?.weeklyRate, duration: "week" },
-            { name: "Monthly Plan",symbol:price?.currency?.symbol, rate: price?.pricing?.monthlyRate, duration: "month" },
-            { name: "Monthly Plan With Trainer",symbol:price?.currency?.symbol, rate: price?.personalTrainerPricing?.monthlyRate, duration: "month" }
+            { name: "Hourly Plan", symbol: price?.currency?.symbol, rate: price?.pricing?.hourlyRate, duration: "hour" },
+            { name: "Hourly Plan With Trainer", symbol: price?.currency?.symbol, rate: price?.personalTrainerPricing?.hourlyRate, duration: "hour" },
+            { name: "Weekly Plan", symbol: price?.currency?.symbol, rate: price?.pricing?.weeklyRate, duration: "week" },
+            { name: "Weekly Plan With Trainer", symbol: price?.currency?.symbol, rate: price?.personalTrainerPricing?.weeklyRate, duration: "week" },
+            { name: "Monthly Plan", symbol: price?.currency?.symbol, rate: price?.pricing?.monthlyRate, duration: "month" },
+            { name: "Monthly Plan With Trainer", symbol: price?.currency?.symbol, rate: price?.personalTrainerPricing?.monthlyRate, duration: "month" }
           ].map((plan) => (
-            <div key={plan.name} className="w-full sm:w-1/3 bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+            <div key={plan.name} className="group relative cursor-pointer w-full overflow-hidden bg-white px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl sm:mx-auto sm:max-w-sm sm:rounded-lg sm:px-10">
               <h3 className="text-xl font-bold">{plan.name}</h3>
               <p className="text-gray-600 mt-2">Access to gym facilities</p>
               <p className="text-3xl font-bold mt-4">{plan.symbol}{plan.rate}/{plan.duration}</p>
-              <button
-                onClick={() => handlePlanSelect(plan.name)}
-                className="text-black border border-black px-3 py-2 rounded hover:bg-black hover:text-white transition mt-5 cursor-pointer"
-              >
-                Choose
+              <button onClick={() => handlePlanSelect(plan.name)}
+                className="text-black hover:before:bg-black relative h-[40px] w-30 overflow-hidden border border-black bg-white px-3 py-2 text-black shadow-2xl transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:shadow-black hover:before:left-0 hover:before:w-full mt-2 cursor-pointer">
+                <span className="relative">Choose</span>
               </button>
             </div>
           ))}
-        </div>
-      ) : (
-        <div className="flex justify-center items-center space-x-2 mt-10">
-          <div className="w-5 h-5 bg-[#d991c2] rounded-full animate-bounce"></div>
-          <div className="w-5 h-5 bg-[#9869b8] rounded-full animate-bounce"></div>
-          <div className="w-5 h-5 bg-[#6756cc] rounded-full animate-bounce"></div>
         </div>
       )}
 
@@ -208,17 +211,18 @@ const CheckPrice = () => {
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               className="border border-gray-400 rounded-md p-2 mt-4 w-full text-center"
+              maxLength={10}
             />
             <div className="flex justify-center gap-4 mt-6">
               <button
                 onClick={handleProceedToPayment}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 transition cursor-pointer"
+                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
               >
                 Proceed to Payment
               </button>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400 transition"
+                className="px-6 py-2 bg-yellow-400 text-white rounded-lg hover:bg-yellow-600 transition cursor-pointer"
               >
                 Close
               </button>

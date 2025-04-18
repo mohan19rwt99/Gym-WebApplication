@@ -4,10 +4,11 @@ import { registerOrLoginUser, getUserByEmail } from "../controller/authControlle
 import { addGym, getGym, getGymCity ,updateGym, deleteGym,getSingleGym, dashboardAdmin, getNearbyGyms } from "../controller/gymAddController.js"
 import { addStaff, deleteStaff, getStaff, staffId, updateStaff } from "../controller/staffMember.js";
 import { protectRoute,getUser } from "@kinde-oss/kinde-node-express";
-import { createPayment, verifyPayment, handleCashfreeWebhook, getPaymentDetails,getPaymentByOrderId , getUserBookingHistory, getOwnerBookings, adminUserDetails, userBookingDashboard, checkActiveBooking } from "../controller/cashfree.js";
+import { createPayment, verifyPayment, handleCashfreeWebhook, getPaymentDetails,getPaymentByOrderId , getUserBookingHistory, getOwnerBookings, adminUserDetails, userBookingDashboard, checkActiveBooking,updateVisitingTime } from "../controller/cashfree.js";
 import {handleWebhook} from "../controller/kindeController.js" 
-
-
+import multer from "multer";
+const storage = multer.memoryStorage(); // or use diskStorage if you want to store locally
+const upload = multer({ storage });
 
 const router = express.Router();
 
@@ -15,9 +16,10 @@ const router = express.Router();
 router.post("/register", registerOrLoginUser)
 router.get("/user", getUserByEmail)
 
-router.post('/addgym', protectRoute, getUser, addGym);
+// router.post('/addgym', upload.single('image'), addGym);
+router.post('/addgym',protectRoute,getUser,upload.single('image'),addGym);
 router.get("/getGym", protectRoute, getUser , getGym);
-router.get("/getGymCity", protectRoute, getUser, getGymCity)
+router.get("/get-gym-city", protectRoute, getUser, getGymCity)
 router.get("/getSingleGym/:id",protectRoute,getUser, getSingleGym)
 router.put("/updateGym/:id",protectRoute,getUser, updateGym);
 router.delete("/deleteGym/:id", protectRoute,getUser ,deleteGym);
@@ -44,6 +46,9 @@ router.post("/cashfree/payment-status", protectRoute,getUser, handleCashfreeWebh
 router.get("/getPaymentDetails/:userId/:bookingId", protectRoute,getUser, getPaymentDetails);
 
 router.get("/getPaymentByOrderId/:orderId", getPaymentByOrderId);
+
+// update time 
+router.put('/update-visiting-time/:userId',protectRoute,getUser,updateVisitingTime)
 
 
 router.get("/getUserBookingHistory", protectRoute,getUser, getUserBookingHistory)

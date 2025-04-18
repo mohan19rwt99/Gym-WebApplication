@@ -79,7 +79,14 @@ function CustomerHistory() {
                                         <td className="px-6 py-4">{new Date(booking.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' })}</td>
                                         <td className="px-6 py-4">{new Date(booking.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' })}</td>
                                         <td className="px-6 py-4">{booking.selectedPlan}</td>
-                                        <td className="px-6 py-4">{booking.status}</td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                booking.status === "completed" ? 'bg-green-100 text-green-800' :
+                                                booking.status === "pending" ? 'bg-yellow-100-text-yellow-800' : 'bg-red-100 text-red-800'
+                                            }`}>
+                                            {booking.status || 'N/A'}
+                                            </span>
+                                        </td>
                                     </tr>
                                 ))
                             )}

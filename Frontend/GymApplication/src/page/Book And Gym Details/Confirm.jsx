@@ -42,6 +42,14 @@ const Confirm = () => {
     window.print(); // Trigger the browser's print dialog
   };
 
+  function formateTimeTo12Hour(time){
+      const [hour,minute] = time.split(":");
+      const hourNum = parseInt(hour,10);
+      const ampm = hourNum >= 12 ? "PM" : "AM";
+      const hour12 = hourNum % 12 || 12;
+      return `${hour12}:${minute} ${ampm}`
+  }
+
   const handleDownload = () => {
     if (!paymentDetails) return;
 
@@ -73,6 +81,11 @@ const Confirm = () => {
       10,
       120
     );
+    doc.text(
+        `Visiting Time: ${formateTimeTo12Hour(paymentDetails.bookingTime)}`,
+        10,
+        130
+    ) 
 
     // Save the PDF
     doc.save("BookingConfirmation.pdf");
@@ -96,7 +109,7 @@ const Confirm = () => {
 
   return (
     <div className="max-w-md mx-auto mt-10 bg-white shadow-xl p-6 rounded-xl border border-gray-200">
-      <h2 className="text-2xl font-semibold text-gray-700 mb-4">Payment Successful</h2>
+      <h2 className="text-2xl font-semibold text-green-500 mb-4">Payment Successful</h2>
       <div
         ref={printRef} // Assign the ref to the printable content
         className="text-gray-700 space-y-2 transform transition duratioin-300 ease-in-out hover:scale-105 hover:shadow-xl bg-white p-6 rounded-lg"
@@ -134,19 +147,22 @@ const Confirm = () => {
         <p>
           <strong>Transaction ID:</strong> {paymentDetails.transactionId || "Not available yet"}
         </p>
+        <p>
+          <strong>Visiting Time:</strong> {formateTimeTo12Hour(paymentDetails.bookingTime)}
+        </p>
       </div>
 
       {/* Buttons for Print and Download */}
       <div className="flex justify-between mt-6">
         <button
           onClick={handlePrint}
-          className="px-4 py-2 bg-[#D4C9BE] text-white rounded-lg hover:bg-[#7a7067] transition-colors cursor-pointer"
+          className="px-4 py-2 bg-[#D4C9BE] text-white rounded-lg hover:bg-[#7a7067] transition-colors cursor-pointer duration-300"
         >
           Print
         </button>
         <button
           onClick={handleDownload}
-          className="px-4 py-2  bg-[#D4C9BE] text-white rounded-lg hover:bg-[#7a7067] transition-colors cursor-pointer"
+          className="px-4 py-2  bg-[#D4C9BE] text-white rounded-lg hover:bg-[#7a7067] transition-colors cursor-pointer duration-300"
         >
           Download
         </button>

@@ -122,7 +122,7 @@ const BookDetails = () => {
         return;
     }
 
-    navigate(`/CheckPrice/${gymId}`, {
+    navigate(`/check-price/${gymId}`, {
       state: { selectedDate, selectedTime },
     });
   };
@@ -165,10 +165,10 @@ const BookDetails = () => {
                 <div className="flex gap-6">
                   <h1 className="text-black min-w-[120px]">Morning Time</h1>
                   <span>
-                    <strong>Opening:</strong> {morningOpeningTime}
+                    <strong>Opening:</strong> {morningOpeningTime} 
                   </span>
                   <span>
-                    <strong>Closing:</strong> {morningClosingTime}
+                    <strong>Closing:</strong> {morningClosingTime} 
                   </span>
                 </div>
 
@@ -176,10 +176,10 @@ const BookDetails = () => {
                 <div className="flex gap-6">
                   <h1 className="text-black min-w-[120px]">Evening Time</h1>
                   <span>
-                    <strong>Opening:</strong> {eveningOpeningTime}
+                    <strong>Opening:</strong> {eveningOpeningTime} 
                   </span>
                   <span>
-                    <strong>Closing:</strong> {eveningClosingTime}
+                    <strong>Closing:</strong> {eveningClosingTime} 
                   </span>
                 </div>
               </div>
@@ -203,8 +203,6 @@ const BookDetails = () => {
                 <input
                   type="time"
                   name="appointment"
-                //   min={new Date().toString().split("T")[0]}
-                //   max={new Date().toString().split("T")[0]}
                   required
                   className="border rounded-lg px-4 py-2"
                   value={selectedTime}

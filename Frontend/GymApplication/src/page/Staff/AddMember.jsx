@@ -81,10 +81,10 @@ function AddMember() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-md">
           <button
-            className="mb-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition cursor-pointer"
+            className="mb-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition duration-300 cursor-pointer"
             onClick={() => navigate(`/gymdetails/${gymId}`)}
           >
-            Back To Page
+            Previous Page
           </button>
 
           <h3 className="text-2xl font-bold text-center mb-6">
@@ -171,7 +171,7 @@ function AddMember() {
                 className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select Staff Role</option>
-                <option value="Admin">Admin</option>
+                {/* <option value="Admin">Admin</option> */}
                 <option value="Manager">Manager</option>
                 <option value="Trainer">Trainer</option>
                 <option value="Receptionist">Receptionist</option>
@@ -182,7 +182,7 @@ function AddMember() {
             <div className="flex justify-center">
               <button
                 type="submit"
-                className="bg-[#D1E7DD] text-white w-full py-2 rounded-lg hover:bg-[#6B8E7B] transition cursor-pointer"
+                className="bg-purple-400 text-white w-full py-2 rounded-lg hover:bg-purple-700 transition duration-300 cursor-pointer"
               >
                 Add
               </button>
