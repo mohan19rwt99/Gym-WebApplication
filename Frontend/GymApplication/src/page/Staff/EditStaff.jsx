@@ -78,7 +78,7 @@ function EditStaff() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-green-100">
+    <div className="min-h-screen flex items-center justify-center">
       <div>
         <div className="bg-black text-white p-5 text-center">
           <h1 className="text-2xl font-bold">Edit Staff Member</h1>

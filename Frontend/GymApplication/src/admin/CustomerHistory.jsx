@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useKindeAuth } from '@kinde-oss/kinde-auth-react';
 import axios from 'axios';
+import Pagination from './pagination/Pagination';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable'; 
 
 function CustomerHistory() {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const { getToken } = useKindeAuth();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [customerPerPage] = useState(3);
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -33,6 +38,40 @@ function CustomerHistory() {
 
         fetchHistory();
     }, [getToken]);
+
+    const indexOfLastCustomer = currentPage * customerPerPage;
+    const indexOfFirstCustomer = indexOfLastCustomer - customerPerPage;
+    const cuurentCustomer = history.slice(indexOfFirstCustomer, indexOfLastCustomer);
+    const totalPages = Math.ceil(history.length / customerPerPage);
+
+    const handleDownload = () => {
+        if (cuurentCustomer.length === 0) return;
+    
+        const doc = new jsPDF();
+    
+        const tableColumn = ["Customer Name", "Gym Name", "Starting Date", "Ending Date", "Plan", "Payment"];
+        const tableRows = [];
+    
+        cuurentCustomer.forEach(booking => {
+            const bookingData = [
+                booking.buyer_name,
+                booking.gymNames,
+                new Date(booking.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' }),
+                new Date(booking.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata' }),
+                booking.selectedPlan,
+                booking.status || 'N/A'
+            ];
+            tableRows.push(bookingData);
+        });
+    
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+        });
+    
+        doc.save('Customer_History.pdf');
+    };
+    
 
     return (
         <>
@@ -65,14 +104,14 @@ function CustomerHistory() {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : history.length === 0 ? (
+                            ) : cuurentCustomer.length === 0 ? (
                                 <tr>
                                     <td colSpan="6" className="text-center py-4 text-gray-600 dark:text-gray-300">
                                         No user found
                                     </td>
                                 </tr>
                             ) : (
-                                history.map((booking, index) => (
+                                cuurentCustomer.map((booking, index) => (
                                     <tr key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200">
                                         <td className="px-6 py-4">{booking.buyer_name}</td>
                                         <td className="px-6 py-4">{booking.gymNames}</td>
@@ -91,7 +130,14 @@ function CustomerHistory() {
                                 ))
                             )}
                         </tbody>
+                        <button
+                        className="px-4 py-2 mt-4 bg-[#D4C9BE] text-white rounded-lg hover:bg-[#7a7067] transition-colors cursor-pointer duration-300" 
+                        onClick={handleDownload}>
+                        Download PDF
+                    </button>
                     </table>
+                   
+                    <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage}/>
                 </div>
             </div>
         </>

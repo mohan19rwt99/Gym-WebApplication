@@ -1,22 +1,28 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import toast from "react-hot-toast";
+import { button } from "@material-tailwind/react";
 
 const BookDetails = () => {
   const { gymId } = useParams();
   const { getToken } = useKindeAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [gymDetail, setGymDetail] = useState({});
   const [loading, setLoading] = useState(true);
-  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedTime, setSelectedTime] = useState([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [morningOpeningTime, setMorningOpeningTime] = useState("");
   const [eveningOpeningTime, setEveningOpeningTime] = useState("");
   const [morningClosingTime, setMorningClosingTime] = useState("");
   const [eveningClosingTime, setEveningClosingTime] = useState("");
+  const [slots, setSlots] = useState({
+    morning: [],
+    evening: [],
+  });
 
   useEffect(() => {
     const fetchGymDetail = async () => {
@@ -28,21 +34,26 @@ const BookDetails = () => {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        console.log("openig Time", response.data);
-        if (response.data) {
-          setGymDetail(response.data);
-          setMorningOpeningTime(
-            formatTime(response.data.timings.morning.openingTime)
-          );
-          setEveningOpeningTime(
-            formatTime(response.data.timings.evening.openingTime)
-          );
-          setMorningClosingTime(
-            formatTime(response.data.timings.morning.closingTime)
-          );
-          setEveningClosingTime(
-            formatTime(response.data.timings.evening.closingTime)
-          );
+
+        console.log("timing according the", response.data.timings);
+        // console.log("max people", response.data.timings.evening.slots[0].maxPeople)
+        // response.data.timings.morning.slots.forEach((slot, index)=>{
+        //   console.log(`Slot ${index + 1} - MaxPeople:`, slot.maxPeople,slot._id)
+        // })
+
+        const data = response.data;
+
+        setSlots({
+          morning: data.timings.morning.slots,
+          evening: data.timings.evening.slots,
+        });
+
+        if (data) {
+          setGymDetail(data);
+          setMorningOpeningTime(formatTime(data.timings.morning.openingTime));
+          setEveningOpeningTime(formatTime(data.timings.evening.openingTime));
+          setMorningClosingTime(formatTime(data.timings.morning.closingTime));
+          setEveningClosingTime(formatTime(data.timings.evening.closingTime));
         }
       } catch (error) {
         console.log("Error", error);
@@ -74,69 +85,96 @@ const BookDetails = () => {
       return;
     }
 
-    const today = new Date().toISOString().split("T")[0];
+    console.log("selectedTime", selectedTime);
 
-    if (selectedDate === today) {
-      const now = new Date();
-      const [hours, minutes] = selectedTime.split(":");
-      const selectedDateTime = new Date();
-      selectedDateTime.setHours(parseInt(hours));
-      selectedDateTime.setMinutes(parseInt(minutes));
-      selectedDateTime.setSeconds(0);
+    // const selectedTimeNumber = parseInt(selectedTime.replace(":", ""), 10);
+    // const morningOpeningTimeNumber = parseInt(
+    //   morningOpeningTime.replace(":", ""),
+    //   10
+    // );
+    // const morningClosingTimeNumber = parseInt(
+    //   morningClosingTime.replace(":", ""),
+    //   10
+    // );
+    // const eveningOpeningTimeNumber = parseInt(
+    //   eveningOpeningTime.replace(":", ""),
+    //   10
+    // );
+    // const eveningClosingTimeNumber = parseInt(
+    //   eveningClosingTime.replace(":", ""),
+    //   10
+    // );
 
-      if (selectedDateTime < now) {
-        toast.error("Please Select The Valid Time:");
-        return;
-      }
-    }
+    // const isMorningSlot =
+    //   selectedTimeNumber >= morningOpeningTimeNumber &&
+    //   selectedTimeNumber <= morningClosingTimeNumber;
 
-    const selectedTimeNumber = parseInt(selectedTime.replace(":", ""), 10);
-    const morningOpeningTimeNumber = parseInt(
-      morningOpeningTime.replace(":", ""),
-      10
-    );
-    const morningClosingTimeNumber = parseInt(
-      morningClosingTime.replace(":", ""),
-      10
-    );
-    const eveningOpeningTimeNumber = parseInt(
-      eveningOpeningTime.replace(":", ""),
-      10
-    );
-    const eveningClosingTimeNumber = parseInt(
-      eveningClosingTime.replace(":", ""),
-      10
-    );
+    // const isEveningSlot =
+    //   selectedTimeNumber >= eveningOpeningTimeNumber &&
+    //   selectedTimeNumber <= eveningClosingTimeNumber;
 
-    const isMorningSlot = selectedTimeNumber >= morningOpeningTimeNumber && selectedTimeNumber <= morningClosingTimeNumber;
+    // if (!isMorningSlot && !isEveningSlot) {
+    //   toast.error(
+    //     `Please select a valid time between ${morningOpeningTime}–${morningClosingTime} or ${eveningOpeningTime}–${eveningClosingTime}`,
+    //     {
+    //       position: "top-center",
+    //       duration: 3000,
+    //     }
+    //   );
+    //   return;
+    // }
 
-    const isEveningslot = selectedTimeNumber >= eveningOpeningTimeNumber && selectedTimeNumber <= eveningClosingTimeNumber;
-
-    if(!isMorningSlot && !isEveningslot){
-        toast.error(
-            `Please Select a Valid time between  ${morningOpeningTime}–${morningClosingTime} or ${eveningOpeningTime}–${eveningClosingTime}`,  {
-                position: "top-center",
-                duration: 3000,
-              }
-        );
-        return;
-    }
-
+    // Success — go to check-price
     navigate(`/check-price/${gymId}`, {
       state: { selectedDate, selectedTime },
     });
   };
 
+  const handleBack = () => {
+    navigate(`/browse-gyms`, {
+      state: location.state,
+    });
+  };
+
+  const timeSelect = (slot) => {
+    console.log("slot strat time", slot.start);
+    console.log("selectedDate", selectedDate);
+
+    const today = new Date().toISOString().split("T")[0];
+
+    if (selectedDate === today) {
+      const now = new Date();
+
+      const [time, modifier] = slot.start.split(" ");
+      let [hours, minutes] = time.split(":").map(Number);
+      if (modifier === "pm" && hours !== 12) hours += 12;
+      if (modifier === "am" && hours === 12) hours = 0;
+      const slotTime = new Date();
+      slotTime.setHours(hours);
+      slotTime.setMinutes(minutes);
+      slotTime.setSeconds(0);
+      slotTime.setMilliseconds(0);
+
+      if (slotTime < now) {
+        toast.error("This slot is in the past. Please select a future time.");
+        return;
+      }
+    }
+
+    setSelectedTime((prevSelected) => {
+      if (prevSelected.includes(slot._id, slot.time)) {
+        return prevSelected.filter((id) => id !== slot._id);
+      } else {
+        // Add to selection
+        return [...prevSelected, slot._id, slot.time];
+      }
+    });
+  };
+
   return (
-    <div>
-      <button
-        onClick={() => navigate(-1)}
-        className="mb-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-800 transition ml-5 cursor-pointer"
-      >
-        Back
-      </button>
-      <div className="flex justify-center p-6">
-        <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-lg text-center">
+    <>
+      <div className="w-full py-6 px-4">
+        <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-6">
           {loading ? (
             <div className="flex justify-center items-center space-x-2">
               <div className="w-5 h-5 bg-[#d991c2] rounded-full animate-bounce"></div>
@@ -144,82 +182,131 @@ const BookDetails = () => {
               <div className="w-5 h-5 bg-[#6756cc] rounded-full animate-bounce"></div>
             </div>
           ) : (
-            <div>
-              <img
-                src={
-                  gymDetail.imageUrl ||
-                  "https://img.freepik.com/premium-photo/modern-gym-interior-with-exercise-equipments_23-2147949737.jpg?w=996"
-                }
-                alt="Gym"
-                className="w-full h-56 object-cover rounded-lg mb-4"
-              />
-              <h1 className="text-2xl font-bold text-gray-800">
+            <>
+              <button
+                onClick={handleBack}
+                className="mb-6 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-800 transition"
+              >
+                Back
+              </button>
+
+              <div className="w-full h-64 overflow-hidden rounded-md mb-6">
+                <img
+                  src={
+                    gymDetail.images?.url ||
+                    "https://img.freepik.com/premium-photo/modern-gym-interior-with-exercise-equipments_23-2147949737.jpg?w=996"
+                  }
+                  alt="Gym"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
                 {gymDetail.gymName}
               </h1>
-              <p className="text-gray-600 mt-2">{gymDetail.description}</p>
+              <p className="text-gray-600 mb-4">{gymDetail.description}</p>
 
-              {/* // Opening And closing Time */}
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Amenities
+                </h2>
+                <ul className="flex flex-wrap gap-3 text-gray-700">
+                  {gymDetail.amenities?.map(
+                    (amenity) =>
+                      amenity.checked && (
+                        <li
+                          key={amenity.id}
+                          className="bg-gray-100 px-3 py-1 rounded-full text-sm"
+                        >
+                          {amenity.label}
+                        </li>
+                      )
+                  )}
+                </ul>
+              </div>
 
-              <div className="flex flex-col items-center text-gray-600 font-semibold mt-3 gap-2">
-                {/* Morning Row */}
-                <div className="flex gap-6">
-                  <h1 className="text-black min-w-[120px]">Morning Time</h1>
-                  <span>
-                    <strong>Opening:</strong> {morningOpeningTime} 
-                  </span>
-                  <span>
-                    <strong>Closing:</strong> {morningClosingTime} 
-                  </span>
+              {/* Time Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-sm font-medium text-gray-700">
+                <div className="p-4 border rounded-lg">
+                  <h3 className="text-md font-semibold mb-2">Morning Hours</h3>
+                  <p>Opening: {morningOpeningTime}</p>
+                  <p>Closing: {morningClosingTime}</p>
                 </div>
-
-                {/* Evening Row */}
-                <div className="flex gap-6">
-                  <h1 className="text-black min-w-[120px]">Evening Time</h1>
-                  <span>
-                    <strong>Opening:</strong> {eveningOpeningTime} 
-                  </span>
-                  <span>
-                    <strong>Closing:</strong> {eveningClosingTime} 
-                  </span>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="text-md font-semibold mb-2">Evening Hours</h3>
+                  <p>Opening: {eveningOpeningTime}</p>
+                  <p>Closing: {eveningClosingTime}</p>
                 </div>
               </div>
 
-              <div className="flex flex-col items-center mt-4">
-                <label className="text-gray-700 font-semibold mb-2">
-                  Select Date:
-                </label>
-                <input
-                  type="date"
-                  className="border rounded-lg px-4 py-2"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                />
+              {/* Date and Time Picker */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="flex flex-col">
+                  <label className="mb-1 text-gray-700 font-semibold">
+                    Select Date:
+                  </label>
+                  <input
+                    type="date"
+                    className="border rounded-md px-4 py-2"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+                {/* <div className="flex flex-col">
+              <label className="mb-1 text-gray-700 font-semibold">Select Gym Visit Time:</label>
+              <input
+                type="time"
+                className="border rounded-md px-4 py-2"
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+              />
+            </div> */}
               </div>
-              <div className="flex flex-col items-center mt-4">
-                <label className="text-gray-700 font-semibold mb-2">
-                  Select Gym Visit Time:
-                </label>
-                <input
-                  type="time"
-                  name="appointment"
-                  required
-                  className="border rounded-lg px-4 py-2"
-                  value={selectedTime}
-                  onChange={(e) => setSelectedTime(e.target.value)}
-                />
+
+              <div className="mt-4 text-center">
+                <h3 className="text-gray-700 font-semibold mb-2">
+                  Select Time Slot:
+                </h3>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {slots.morning.concat(slots.evening).map((slot) => (
+                    <button
+                      key={slot._id}
+                      onClick={() => timeSelect(slot)}
+                      disabled={slot.booked >= slot.maxPeople}
+                      className={`px-4 py-2 rounded-lg border ${
+                        selectedTime.includes(slot._id)
+                          ? "bg-gray-800 text-white"
+                          : "bg-white text-gray-800"
+                      } ${
+                        slot.booked >= slot.maxPeople
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      {slot.start}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <button
-                onClick={handleSubmit}
-                className="text-gray-900 hover:text-white border border-gray-800 hover:bg-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mt-2 cursor-pointer"
-              >
-                Enter
-              </button>
-            </div>
+
+              {/* Submit */}
+              <div className="text-center">
+                <p className="text-xl font-bold text-blue-900 mb-3">
+                  Confirm Time
+                </p>
+                <button
+                  onClick={handleSubmit}
+                  className="text-white bg-gray-400 hover:bg-black font-medium rounded-lg text-sm px-6 py-2 hover:bg-gray-800 transition transform duration-300 cursor-pointer"
+                >
+                  Continue
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import { GoogleMap, Marker, InfoWindow, useLoadScript } from "@react-google-maps/api";
 
@@ -21,8 +21,8 @@ const BrowseGyms = () => {
   const [searched, setSearched] = useState(false);
   const [selectedGym, setSelectedGym] = useState(null);
   const [mapCenter, setMapCenter] = useState(centerDefault);
-  const [userLocation, setUserLocation] = useState(null); // For storing user's current location
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { getToken } = useKindeAuth();
 
@@ -30,6 +30,15 @@ const BrowseGyms = () => {
     googleMapsApiKey: "AIzaSyC8dQaD5ZNlJnsPydXHDpJLv7usOU1LM_Q",
   });
 
+  // Restore saved state when navigating back
+  useEffect(() => {
+    if (location.state?.searchTerm) {
+      setQuery(location.state.searchTerm);
+      setGyms(location.state.gyms || []);
+      setMapCenter(location.state.mapCenter || centerDefault);
+      setSearched(true);
+    }
+  }, [location.state]);
 
   // Fetch gyms based on the city or gym name
   const fetchGymsByQuery = async () => {
@@ -43,7 +52,7 @@ const BrowseGyms = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Response for get City", response.data)
+      console.log("Response for get City", response.data);
 
       const data = response.data;
       if (data.length === 0) {
@@ -66,27 +75,14 @@ const BrowseGyms = () => {
     }
   };
 
-  // Get user location on page load
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          fetchGyms(latitude, longitude); // Fetch gyms based on user's current location
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          toast.error("Failed to get your location");
-        }
-      );
-    } else {
-      toast.error("Geolocation is not supported by your browser");
-    }
-  }, []);
-
   const handleBookingDetails = (gymId) => {
-    navigate(`/book-details/${gymId}`);
+    navigate(`/book-details/${gymId}`, {
+      state: {
+        searchTerm: query,
+        gyms: gyms,
+        mapCenter: mapCenter,
+      },
+    });
   };
 
   return (
@@ -100,6 +96,7 @@ const BrowseGyms = () => {
           placeholder="Search by city or gym name..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && fetchGymsByQuery()}
           className="bg-gray-100 p-2 border rounded-lg shadow-md w-full md:w-1/2"
         />
         <button
@@ -159,7 +156,7 @@ const BrowseGyms = () => {
           gyms.map((gym) => (
             <div
               key={gym._id}
-              className="bg-white p-4 border rounded-lg shadow-md"
+              className="bg-white p-4 border rounded-lg shadow-md trasition-all duration-300 hover:traslate-y-1 hover:shadow-2xl"
             >
               <h2 className="text-xl font-semibold">{gym.gymName}</h2>
               <p>City: {gym.address?.location}</p>

@@ -18,6 +18,7 @@ const CheckPrice = () => {
   const [isLoading, setIsLoading] = useState(true); // Add this state
   const location = useLocation();
   const { selectedDate = "", selectedTime = "" } = location.state || {};
+  console.log("selected Date and selected Time", selectedDate, selectedTime)
   const navigate = useNavigate();
   const cashfree = useRef(null);
 

@@ -31,7 +31,7 @@ export const addGym = async (req, res) => {
       amenities,
     } = JSON.parse(req.body.data);
 
-    console.log('Amenities:', amenities);
+    console.log('Amenities:', timings.morning);
 
     const currencySymbols = {
       INR: '₹',
@@ -134,7 +134,6 @@ export const addGym = async (req, res) => {
     });
   }
 };
-
 
 
 export const getGym = async (req, res) => {

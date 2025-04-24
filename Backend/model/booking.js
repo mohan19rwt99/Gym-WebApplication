@@ -16,7 +16,11 @@ const paymentSchema = new mongoose.Schema({
     endDate: Date,
     gymNames: String,
     bookingDate: { type: String },
-    bookingTime: { type: String },
+    bookingTime: [
+      {
+        type:String
+      }
+    ],
 
   }, { timestamps: true });
 const Payment = mongoose.model("Payment", paymentSchema);

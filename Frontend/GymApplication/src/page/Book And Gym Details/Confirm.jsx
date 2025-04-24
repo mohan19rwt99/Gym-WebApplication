@@ -8,7 +8,7 @@ const Confirm = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [error, setError] = useState("");
 
-  const printRef = useRef(); // Reference for the printable content
+  const printRef = useRef(); 
 
   useEffect(() => {
     const verifyAndFetch = async () => {
@@ -39,16 +39,16 @@ const Confirm = () => {
   }, [orderId]);
 
   const handlePrint = () => {
-    window.print(); // Trigger the browser's print dialog
+    window.print(); 
   };
 
-  function formateTimeTo12Hour(time){
-      const [hour,minute] = time.split(":");
-      const hourNum = parseInt(hour,10);
-      const ampm = hourNum >= 12 ? "PM" : "AM";
-      const hour12 = hourNum % 12 || 12;
-      return `${hour12}:${minute} ${ampm}`
-  }
+  // function formateTimeTo12Hour(time){
+  //     const [hour,minute] = time.split(":");
+  //     const hourNum = parseInt(hour,10);
+  //     const ampm = hourNum >= 12 ? "PM" : "AM";
+  //     const hour12 = hourNum % 12 || 12;
+  //     return `${hour12}:${minute} ${ampm}`
+  // }
 
   const handleDownload = () => {
     if (!paymentDetails) return;
@@ -82,7 +82,7 @@ const Confirm = () => {
       120
     );
     doc.text(
-        `Visiting Time: ${formateTimeTo12Hour(paymentDetails.bookingTime)}`,
+        `Visiting Time: ${(paymentDetails.bookingTime)}`,
         10,
         130
     ) 
@@ -148,7 +148,7 @@ const Confirm = () => {
           <strong>Transaction ID:</strong> {paymentDetails.transactionId || "Not available yet"}
         </p>
         <p>
-          <strong>Visiting Time:</strong> {formateTimeTo12Hour(paymentDetails.bookingTime)}
+          <strong>Visiting Time:</strong> {(paymentDetails.bookingTime)}
         </p>
       </div>
 

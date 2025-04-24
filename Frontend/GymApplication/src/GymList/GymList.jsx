@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useKindeAuth } from "@kinde-oss/kinde-auth-react";
 import { useNavigate } from "react-router-dom";
+import { FaPlus } from "react-icons/fa";
 
 function GymList() {
   const { getToken } = useKindeAuth();
@@ -75,7 +76,7 @@ function GymList() {
                 class="inline-flex items-center justify-center bg-purple-400 text-white px-3 py-2 rounded hover:bg-purple-700 transition transform hover:translate-y-[-2px] hover:shadow-md cursor-pointer"
                 onClick={() => navigate(`/gymdetails/${gym._id}`)}
               >
-                <i class="fas fa-plus mr-2"></i> Add Staff
+                <i class="fas fa-plus mr-2"></i> <FaPlus className="mr-2"/> Add Staff
               </button>
             </div>
           ))}

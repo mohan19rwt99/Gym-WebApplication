@@ -115,11 +115,12 @@ const CustomerDashboard = () => {
 
       {/* Customer Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 w-full max-w-4xl">
-        <div className="bg-[#D8B4FE] text-white p-6 rounded-lg shadow-md transform transition duration-500 hover:scale-105">
+        <div className="bg-[#D8B4FE] text-white p-6 rounded-lg shadow-md transform">
+        {/* transition duration-500 hover:scale-105 */}
           <h3 className="text-xl font-semibold">Total Bookings</h3>
           <p className="text-3xl font-bold">{stats.totalBookings}</p>
         </div>
-        <div className="bg-[#A5B4FC] text-white p-6 rounded-lg shadow-md transition tranform duration-500 hover:scale-105">
+        <div className="bg-[#A5B4FC] text-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold">Bookings Today</h3>
           <p className="text-3xl font-bold">{stats.bookingsToday}</p>
         </div>

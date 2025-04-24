@@ -24,6 +24,7 @@ import Confirm from './page/Book And Gym Details/Confirm';
 import CustomerHistory from './admin/CustomerHistory';
 import AdminUserFiltter from './admin/AdminUserFiltter';
 import CustomerDashboard from './customerDashboard/CustomerDashboard';
+import AddShiftForm from './admin/shift/AddShiftForm';
 
 function PrivateRoute({ element, requiredPermission }) {
     const { isAuthenticated, isLoading, getPermissions} = useKindeAuth();
@@ -98,7 +99,7 @@ const router = createBrowserRouter([
                 element: <PrivateRoute element={<BookSession />} requiredPermission="view-gyms" />
             },
             {
-                path: "editStaff/:id",
+                path: "editstaff/:id",
                 element: <PrivateRoute element={<EditStaff />} requiredPermission="manage_gyms" />
             },
             {
@@ -156,6 +157,11 @@ const router = createBrowserRouter([
             {
                 path: "admin-user-filtter",
                 element: <PrivateRoute element={<AdminUserFiltter />} requiredPermission="manage_gyms" />
+            },
+            {
+                path:"add-shift",
+                element: <PrivateRoute element={<AddShiftForm/>}
+                requiredPermission="manage_gyms"/> 
             }
         ]
     }

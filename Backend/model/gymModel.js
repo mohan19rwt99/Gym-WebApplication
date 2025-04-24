@@ -26,33 +26,62 @@ const gymSchema = new mongoose.Schema({
         monthlyRate: { type: Number, required: true, min: 0 }
     },
     timings: {
-        morning: {
-          openingTime: { type: Date, required: true },
-          closingTime: { 
-            type: Date, 
-            required: true,
-            validate: {
-              validator: function(value) {
-                return value && this.parent().openingTime && value.getTime() > this.parent().openingTime.getTime();
-              },
-              message: 'Morning closing time must be after opening time'
-            }
+      morning: {
+        openingTime: {
+          type: Date,
+          required: true
+        },
+        closingTime: {
+          type: Date,
+          required: true,
+          validate: {
+            validator: function (value) {
+              return (
+                value &&
+                this.openingTime &&
+                value.getTime() > this.openingTime.getTime()
+              );
+            },
+            message: 'Morning closing time must be after opening time'
           }
         },
-        evening: {
-          openingTime: { type: Date, required: true },
-          closingTime: { 
-            type: Date, 
-            required: true,
-            validate: {
-              validator: function(value) {
-                return value && this.parent().openingTime && value.getTime() > this.parent().openingTime.getTime();
-              },
-              message: 'Evening closing time must be after opening time'
-            }
+        slots: [
+          {
+            start: { type: String, required: true },  
+            end: { type: String, required: true },    
+            maxPeople: { type: Number, required: true }
           }
-        }
+        ]
       },
+      evening: {
+        openingTime: {
+          type: Date,
+          required: true
+        },
+        closingTime: {
+          type: Date,
+          required: true,
+          validate: {
+            validator: function (value) {
+              return (
+                value &&
+                this.openingTime &&
+                value.getTime() > this.openingTime.getTime()
+              );
+            },
+            message: 'Evening closing time must be after opening time'
+          }
+        },
+        slots: [
+          {
+            start: { type: String, required: true },
+            end: { type: String, required: true },
+            maxPeople: { type: Number, required: true }
+          }
+        ]
+      }
+    }
+    ,
     currency: {
       name:{
         type: String,
@@ -99,4 +128,4 @@ gymSchema.index({ coordinates: '2dsphere' });
 
 const GymAdd = mongoose.model("Gym", gymSchema);
 
-export default GymAdd;
+export default GymAdd;  

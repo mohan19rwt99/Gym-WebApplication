@@ -20,6 +20,20 @@ const NewGymAdd = () => {
   const [eveningClosingTime, setEveningClosingTime] = useState(
     new Date().setHours(22, 0)
   );
+
+  const [morningSlots, setMorningSlots] = useState([]);
+  const [eveningSlots, setEveningSlots] = useState([]);
+  const [morningNewSlot, setMorningNewSlot] = useState({
+    start: "",
+    end: "",
+    maxPeople: 0,
+  });
+  const [eveningNewSlot, setEveningNewSlot] = useState({
+    start: "",
+    end: "",
+    maxPeople: 0,
+  });
+
   const [error, setError] = useState("");
   const [currency, setCurrency] = useState("INR");
   const [amenties, setAmenties] = useState([
@@ -36,8 +50,9 @@ const NewGymAdd = () => {
     { id: "Parking", label: "Parking", checked: false },
   ]);
 
-  const [file, setFile] = useState()
+  const [file, setFile] = useState();
   // const [imageFiles, setImageFiles] = useState([null, null, null]);
+  const [viewImages, setImagesView] = useState([null]);
 
   const { getToken } = useKindeAuth();
   const navigate = useNavigate();
@@ -113,6 +128,13 @@ const NewGymAdd = () => {
       updatedClosingTime.setHours(updatedClosingTime.getHours() + 1);
       setMorningClosingTime(updatedClosingTime);
     }
+    // Regenrate slots
+    const updateSlots = generateSlots(
+      time,
+      morningClosingTime,
+      morningNewSlot.maxPeople
+    );
+    setMorningSlots(updateSlots)
   };
 
   // Handle Morning closing time
@@ -122,7 +144,27 @@ const NewGymAdd = () => {
     } else {
       setError("");
       setMorningClosingTime(time);
+      // Re-generate slots
+      const updatedSlots = generateSlots(
+        morningOpeningTime,
+        time,
+        morningNewSlot.maxPeople
+      );
+      setMorningSlots(updatedSlots);
     }
+  };
+
+  // input max People
+
+  const handleMaxPeopleChange = (e) => {
+    const maxPeople = parseInt(e.target.value, 10);
+    setMorningNewSlot((prev) => ({ ...prev, maxPeople }));
+    const updatedSlots = generateSlots(
+      morningOpeningTime,
+      morningClosingTime,
+      maxPeople
+    );
+    setMorningSlots(updatedSlots);
   };
 
   // evening Opening Time
@@ -132,7 +174,12 @@ const NewGymAdd = () => {
       const updatedClosingTime = new Date(time);
       updatedClosingTime.setHours(updatedClosingTime.getHours() + 1);
       setEveningClosingTime(updatedClosingTime);
+
     }
+    // Regenrate Evening Opening Time
+    const updateSlots = generateSlots(time, eveningClosingTime, eveningNewSlot.maxPeople);
+    setEveningSlots(updateSlots) 
+
   };
 
   // evening closing Time
@@ -142,7 +189,47 @@ const NewGymAdd = () => {
     } else {
       setError("");
       setEveningClosingTime(time);
+      // Re-generate slots
+    const updatedSlots = generateSlots(eveningOpeningTime, time, eveningNewSlot.maxPeople);
+    setEveningSlots(updatedSlots);
     }
+  };
+
+  const handleEveningMaxPeopleChange = (e)=>{
+    const maxPeople = parseInt(e.target.value,10);
+    setEveningNewSlot((prev)=>({...prev, maxPeople}));
+    const updatedSlots = generateSlots(eveningOpeningTime, eveningClosingTime, maxPeople);
+    setEveningSlots(updatedSlots);
+  }
+
+  const formatTime = (timeStamp)=>{
+    const date = new Date(timeStamp);
+    return date.toLocaleTimeString('en-IN',{
+      hour:'2-digit',
+      minute:'2-digit',
+      hour12:true,
+    })
+  }
+
+  const generateSlots = (startTime, endTime, maxPeople) => {
+    const slots = [];
+    console.log("slots",slots)
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+
+    let current = start;
+    while (current < end) {
+      const next = new Date(current + 30 * 60 * 1000);
+      if (next.getTime() <= end) {
+        slots.push({
+          start: formatTime(current),
+          end: formatTime(next.getTime()),
+          maxPeople: maxPeople || 0,
+        });
+      }
+      current = next.getTime();
+    }
+    return slots;
   };
 
   const inputHandler = (e) => {
@@ -210,8 +297,6 @@ const NewGymAdd = () => {
       return Number(value);
     };
 
-   
-
     const data = {
       ...formData,
       currency: {
@@ -230,14 +315,24 @@ const NewGymAdd = () => {
         monthlyRate: parseNumber(formData.trainerMonthlyRate),
       },
       timings: {
-        morning: {
-          openingTime: new Date(morningOpeningTime),
-          closingTime: new Date(morningClosingTime),
+        morning:{
+          openingTime:morningOpeningTime,
+          closingTime:morningClosingTime,
+          slots: morningSlots.map((slot) => ({
+            start: slot.start,
+            end: slot.end,
+            maxPeople: slot.maxPeople,
+          }))
         },
-        evening: {
-          openingTime: new Date(eveningOpeningTime),
-          closingTime: new Date(eveningClosingTime),
-        },
+        evening:{
+          openingTime:eveningOpeningTime,
+          closingTime:eveningClosingTime,
+          slots: eveningSlots.map((slot) => ({
+            start: slot.start,
+            end: slot.end,
+            maxPeople: slot.maxPeople,
+          })),
+        }
       },
       amenities: amenties
         .filter((amenity) => amenity.checked)
@@ -261,10 +356,10 @@ const NewGymAdd = () => {
     }
 
     try {
-      console.log("data",data)
+      console.log("data", data);
       const dataForm = new FormData();
       dataForm.append("data", JSON.stringify(data));
-      dataForm.append("image",file);
+      dataForm.append("image", file);
 
       const response = await axios.post(
         "http://localhost:4000/api/addgym",
@@ -295,6 +390,19 @@ const NewGymAdd = () => {
         duration: 4000,
       });
     }
+  };
+
+  const handleInputImage = (e) => {
+    const showImage = e.target.files[0];
+    if (showImage) {
+      setFile(showImage);
+      setImagesView(URL.createObjectURL(showImage));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFile(null);
+    setImagesView(null);
   };
 
   return (
@@ -402,14 +510,30 @@ const NewGymAdd = () => {
                     Gallery
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <input 
-                        type="file" 
-                        filename={file}
-                        onChange={e=>setFile(e.target.files[0])}
-                        accept="image/"                        
-
+                    {!viewImages && (
+                      <input
+                        type="file"
+                        onChange={handleInputImage}
+                        accept="image/*"
+                        className="border border-blue-500 w-full h-[300px] object-fit"
+                      />
+                    )}
+                    {viewImages && (
+                      <div className="relative">
+                        <img
+                          src={viewImages}
+                          alt="Uploaded"
+                          className="w-full border border-gray-500 h-[300px] object-cover"
                         />
-                  </div>   
+                        <button
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="sm:col-span-3">
@@ -645,15 +769,14 @@ const NewGymAdd = () => {
                 </div>
 
                 {/* Hours Section */}
-                {/* Hours Section */}
                 <div className="border-b border-gray-200 pb-8">
                   <h3 className="text-lg font-medium text-gray-900 mb-6">
                     Operating Hours
                   </h3>
 
                   {/* Morning Timings */}
-                  <div className="mb-8">
-                    <h4 className="text-md font-medium text-gray-800 mb-4">
+                  <div className="w-full max-w-sm min-w-[200px]">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4">
                       Morning Timings
                     </h4>
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -669,7 +792,7 @@ const NewGymAdd = () => {
                           timeIntervals={30}
                           timeCaption="Time"
                           dateFormat="h:mm aa"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                          className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
                         />
                       </div>
                       <div className="sm:col-span-3">
@@ -691,11 +814,39 @@ const NewGymAdd = () => {
                         )}
                       </div>
                     </div>
+                    <div className="w-full max-w-sm min-w-[200px]">
+                      <label
+                        htmlFor="maxPeople"
+                        className="block text-sm font-medium"
+                      >
+                        Max People
+                      </label>
+                      <input
+                        type="number"
+                        id="maxPeople"
+                        value={morningNewSlot.maxPeople}
+                        onChange={handleMaxPeopleChange}
+                        placeholder="Enter Max People"
+                        className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow mt-2 cursor-pointer"
+                      />
+                    </div>
+                      <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+                        {morningSlots.map((slot, index) => (
+                          <li
+                            key={index}
+                            className="flex justify-between items-center"
+                          >
+                            <span>
+                              {slot.start} - {slot.end} ({slot.maxPeople} People)
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                   </div>
 
                   {/* Evening Timings */}
-                  <div className="mb-8">
-                    <h4 className="text-md font-medium text-gray-800 mb-4">
+                  <div className="w-full max-w-sm min-w-[200px] mt-3">
+                    <h4 className="text-lg font-medium text-gray-800 mb-4">
                       Evening Timings
                     </h4>
                     <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -733,6 +884,37 @@ const NewGymAdd = () => {
                         )}
                       </div>
                     </div>
+                    <div className="w-full max-w-sm min-w-[200px]">
+                      <label
+                        htmlFor="maxPeople"
+                        className="block text-sm font-medium"
+                      >
+                        Max People
+                      </label>
+                      <input
+                        type="number"
+                        id="maxPeople"
+                        value={eveningNewSlot.maxPeople}
+                        onChange={handleEveningMaxPeopleChange}
+                        placeholder="Enter Max People"
+                        className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow mt-2 cursor-pointer"
+                      />
+                    </div>
+                      <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+                        {eveningSlots.map((slot, index) => (
+                          <li
+                            key={index}
+                            className="flex justify-between items-center"
+                          >
+                            <span>
+                              {slot.start} - {slot.end} ({slot.maxPeople} People)
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                  
+
+                    
                   </div>
                 </div>
 
