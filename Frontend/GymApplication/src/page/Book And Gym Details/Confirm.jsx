@@ -81,11 +81,18 @@ const Confirm = () => {
       10,
       120
     );
-    doc.text(
-        `Visiting Time: ${(paymentDetails.bookingTime)}`,
-        10,
-        130
-    ) 
+    
+    let currentY = 130;
+    doc.text("Visiting Slots", 10, currentY)
+    currentY +=10;
+
+    paymentDetails.bookingTimeSlots.forEach((slot,index)=>{
+      doc.text(`Slot ${index + 1}:`, 10, currentY);
+    doc.text(`  Date: ${slot.date}`, 10, currentY + 10);
+    doc.text(`  Time: ${slot.time}`, 10, currentY + 20);
+    doc.text(`  Status: ${slot.status}`, 10, currentY + 30);
+    currentY += 40; 
+    })
 
     // Save the PDF
     doc.save("BookingConfirmation.pdf");
@@ -147,9 +154,24 @@ const Confirm = () => {
         <p>
           <strong>Transaction ID:</strong> {paymentDetails.transactionId || "Not available yet"}
         </p>
-        <p>
-          <strong>Visiting Time:</strong> {(paymentDetails.bookingTime)}
-        </p>
+       <div>
+        <strong>Visiting Slots:</strong>
+        <ul className="list-disc ml-5 mt-2"
+        >{paymentDetails.bookingTimeSlots.map((slot, index)=>(
+          <li key={slot._id}>
+            <p>Slot {index +1}:</p>
+            <p>
+              <strong>Date:</strong> {slot.date}
+            </p>
+            <p>
+              <strong>Time:</strong> {slot.time}
+            </p>
+            <p>
+              <strong>Status:</strong> {slot.status}
+            </p>
+          </li>
+        ))}</ul>
+       </div>
       </div>
 
       {/* Buttons for Print and Download */}

@@ -15,10 +15,15 @@ const CheckPrice = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [gymName, setGymName] = useState('');
-  const [isLoading, setIsLoading] = useState(true); // Add this state
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
-  const { selectedDate = "", selectedTime = "" } = location.state || {};
-  console.log("selected Date and selected Time", selectedDate, selectedTime)
+  
+  // Ensure selectedTime is always an array
+  const { selectedDate = "", selectedTime = [] } = location.state || {};
+  const numberOfSlots = selectedTime.length || 1;
+  
+  console.log("Selected slots data:", { selectedDate, selectedTime, numberOfSlots });
+  
   const navigate = useNavigate();
   const cashfree = useRef(null);
 
@@ -26,12 +31,11 @@ const CheckPrice = () => {
   useEffect(() => {
     const fetchPrice = async () => {
       try {
-        setIsLoading(true); // Start loading
+        setIsLoading(true);
         const token = await getToken();
         const res = await axios.get(`http://localhost:4000/api/getSingleGym/${gymId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log("get Single gym", res.data);
 
         setPrice({
           pricing: res.data.pricing || {},
@@ -43,7 +47,7 @@ const CheckPrice = () => {
         console.error("Error fetching gym data:", error);
         toast.error("Failed to load pricing.");
       } finally {
-        setIsLoading(false); // Stop loading
+        setIsLoading(false);
       }
     };
     fetchPrice();
@@ -63,13 +67,13 @@ const CheckPrice = () => {
       end.setDate(end.getDate() + 30);
     }
     setEndDate(end.toISOString().split('T')[0]);
-  }, [selectedPlan]);
+  }, [selectedPlan, selectedDate]);
 
   // Load Cashfree SDK
   useEffect(() => {
     const initCashfree = async () => {
       try {
-        cashfree.current = await load({ mode: "sandbox" }); // Change to 'production' for live
+        cashfree.current = await load({ mode: "sandbox" });
       } catch (err) {
         console.error("Cashfree SDK load failed:", err);
         toast.error("Cashfree failed to load");
@@ -79,6 +83,10 @@ const CheckPrice = () => {
   }, []);
 
   const handlePlanSelect = (plan) => {
+    if (selectedTime.length === 0) {
+      toast.error("Please select at least one time slot first");
+      return;
+    }
     setSelectedPlan(plan);
     setIsModalOpen(true);
   };
@@ -96,10 +104,11 @@ const CheckPrice = () => {
     try {
       const token = await getToken();
 
-      const checkRes = await axios.get(`http://localhost:4000/api/booking-active/${user?.id}/${gymId}`,  {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      console.log("rescheck", checkRes.data);
+      // Check for existing bookings
+      const checkRes = await axios.get(
+        `http://localhost:4000/api/booking-active/${user?.id}/${gymId}`, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       if (checkRes.data.conflict) {
         const { startDate, endDate } = checkRes.data.booking;
@@ -109,17 +118,31 @@ const CheckPrice = () => {
       }
 
       let rate;
+      let baseRate;
 
-      if (selectedPlan.includes("Hourly Plan With Trainer")) rate = price.personalTrainerPricing.hourlyRate;
-      else if (selectedPlan.includes("Hourly Plan")) rate = price.pricing.hourlyRate;
-      else if (selectedPlan.includes("Weekly Plan With Trainer")) rate = price.personalTrainerPricing.weeklyRate;
-      else if (selectedPlan.includes("Weekly Plan")) rate = price.pricing.weeklyRate;
-      else if (selectedPlan.includes("Monthly Plan With Trainer")) rate = price.personalTrainerPricing.monthlyRate;
-      else if (selectedPlan.includes("Monthly Plan")) rate = price.pricing.monthlyRate;
+      // Get base rate for the selected plan
+      if (selectedPlan.includes("Hourly Plan With Trainer")) baseRate = price.personalTrainerPricing.hourlyRate;
+      else if (selectedPlan.includes("Hourly Plan")) baseRate = price.pricing.hourlyRate;
+      else if (selectedPlan.includes("Weekly Plan With Trainer")) baseRate = price.personalTrainerPricing.weeklyRate;
+      else if (selectedPlan.includes("Weekly Plan")) baseRate = price.pricing.weeklyRate;
+      else if (selectedPlan.includes("Monthly Plan With Trainer")) baseRate = price.personalTrainerPricing.monthlyRate;
+      else if (selectedPlan.includes("Monthly Plan")) baseRate = price.pricing.monthlyRate;
       else {
         toast.error("Invalid plan");
         return;
       }
+
+      // Calculate total amount based on number of slots
+      rate = baseRate * numberOfSlots;
+
+      // Format bookingTimeSlots for backend
+      const bookingTimeSlots = selectedTime.map(slot => ({
+        date: selectedDate,
+        time: slot.time,
+        slotId: slot._id
+      }));
+
+      console.log("booking Time slots", bookingTimeSlots)
 
       // Call backend to create payment session
       const res = await axios.post(
@@ -132,25 +155,25 @@ const CheckPrice = () => {
           gymId,
           selectedPlan,
           amount: rate,
+          baseAmount: baseRate,
+          numberOfSlots,
           currency: "INR",
           startDate,
           endDate,
           gymNames: gymName,
           bookingDate: today,
-          bookingTime: selectedTime
+          bookingTimeSlots, // Properly formatted array
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("response for send payment in cashfree", res.data)
-
       const sessionId = res.data.paymentSessionId;
 
-      // Cashfree Checkout (redirects to Cashfree UI)
+      // Cashfree Checkout
       if (cashfree.current) {
         await cashfree.current.checkout({
           paymentSessionId: sessionId,
-          redirectTarget: "_self" // Redirect to success URL
+          redirectTarget: "_self"
         });
       }
     } catch (error) {
@@ -163,13 +186,37 @@ const CheckPrice = () => {
     setIsModalOpen(false);
   };
 
+  // Display price with number of slots
+  const renderPlanPrice = (plan) => {
+    const totalPrice = plan.rate * numberOfSlots;
+    return (
+      <>
+        <p className="text-lg">
+          {plan.symbol}{plan.rate} per slot {numberOfSlots > 1 && `× ${numberOfSlots}`}
+        </p>
+        {numberOfSlots > 1 && (
+          <p className="text-3xl font-bold mt-2">
+            Total: {plan.symbol}{totalPrice}
+          </p>
+        )}
+      </>
+    );
+  };
+
   return (
     <div className='container mx-auto px-4 py-8'>
-      <button onClick={() => navigate(-1)} className="mb-6 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 transition cursor-pointer">Back</button>
+      <button onClick={() => navigate(-1)} className="mb-6 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-600 transition cursor-pointer">
+        Back
+      </button>
 
       <div className='text-center'>
         <h2 className="text-3xl font-bold sm:text-5xl">Choose Your Plan</h2>
         <p className="max-w-3xl mx-auto mt-4 text-xl">Choose a plan that fits your needs and upgrade anytime.</p>
+        {numberOfSlots > 0 && (
+          <p className="text-lg text-blue-600 mt-2">
+            Booking {numberOfSlots} slot{numberOfSlots > 1 ? 's' : ''} on {new Date(selectedDate).toLocaleDateString()}
+          </p>
+        )}
       </div>
 
       {isLoading ? (
@@ -191,9 +238,11 @@ const CheckPrice = () => {
             <div key={plan.name} className="group relative cursor-pointer w-full overflow-hidden bg-white px-6 pt-10 pb-8 shadow-xl ring-1 ring-gray-900/5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl sm:mx-auto sm:max-w-sm sm:rounded-lg sm:px-10">
               <h3 className="text-xl font-bold">{plan.name}</h3>
               <p className="text-gray-600 mt-2">Access to gym facilities</p>
-              <p className="text-3xl font-bold mt-4">{plan.symbol}{plan.rate}/{plan.duration}</p>
-              <button onClick={() => handlePlanSelect(plan.name)}
-                className="text-black hover:before:bg-black relative h-[40px] w-30 overflow-hidden border border-black bg-white px-3 py-2 text-black shadow-2xl transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:shadow-black hover:before:left-0 hover:before:w-full mt-2 cursor-pointer">
+              {renderPlanPrice(plan)}
+              <button 
+                onClick={() => handlePlanSelect(plan.name)}
+                className="text-black hover:before:bg-black relative h-[40px] w-30 overflow-hidden border border-black bg-white px-3 py-2 text-black shadow-2xl transition-all before:absolute before:bottom-0 before:left-0 before:top-0 before:z-0 before:h-full before:w-0 before:bg-black before:transition-all before:duration-500 hover:text-white hover:shadow-black hover:before:left-0 hover:before:w-full mt-2 cursor-pointer"
+              >
                 <span className="relative">Choose</span>
               </button>
             </div>

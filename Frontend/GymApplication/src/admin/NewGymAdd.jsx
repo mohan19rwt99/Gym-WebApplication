@@ -51,7 +51,6 @@ const NewGymAdd = () => {
   ]);
 
   const [file, setFile] = useState();
-  // const [imageFiles, setImageFiles] = useState([null, null, null]);
   const [viewImages, setImagesView] = useState([null]);
 
   const { getToken } = useKindeAuth();
@@ -96,27 +95,6 @@ const NewGymAdd = () => {
     );
   };
 
-  // for Gallary Upload
-  // const handleImageChange = (event, index) => {
-  //   const file = event.target.files[0];
-  //   setImages(file);
-  //   if (file) {
-  //     const updatedImages = [...images];
-  //     const updatedFiles = [...imageFiles];
-
-  //     updatedImages[index] = URL.createObjectURL(file);
-  //     updatedFiles[index] = file;
-
-  //     setImages(updatedImages);
-  //     setImageFiles(updatedFiles);
-  //   }
-  // };
-
-  // const removeImage = (index) => {
-  //   const updatedImages = [...images];
-  //   updatedImages[index] = null;
-  //   setImages(updatedImages);
-  // };
 
   const [position, setPosition] = useState({ lat: 0, lng: 0 });
 
@@ -134,7 +112,7 @@ const NewGymAdd = () => {
       morningClosingTime,
       morningNewSlot.maxPeople
     );
-    setMorningSlots(updateSlots)
+    setMorningSlots(updateSlots);
   };
 
   // Handle Morning closing time
@@ -174,12 +152,14 @@ const NewGymAdd = () => {
       const updatedClosingTime = new Date(time);
       updatedClosingTime.setHours(updatedClosingTime.getHours() + 1);
       setEveningClosingTime(updatedClosingTime);
-
     }
     // Regenrate Evening Opening Time
-    const updateSlots = generateSlots(time, eveningClosingTime, eveningNewSlot.maxPeople);
-    setEveningSlots(updateSlots) 
-
+    const updateSlots = generateSlots(
+      time,
+      eveningClosingTime,
+      eveningNewSlot.maxPeople
+    );
+    setEveningSlots(updateSlots);
   };
 
   // evening closing Time
@@ -190,30 +170,38 @@ const NewGymAdd = () => {
       setError("");
       setEveningClosingTime(time);
       // Re-generate slots
-    const updatedSlots = generateSlots(eveningOpeningTime, time, eveningNewSlot.maxPeople);
-    setEveningSlots(updatedSlots);
+      const updatedSlots = generateSlots(
+        eveningOpeningTime,
+        time,
+        eveningNewSlot.maxPeople
+      );
+      setEveningSlots(updatedSlots);
     }
   };
 
-  const handleEveningMaxPeopleChange = (e)=>{
-    const maxPeople = parseInt(e.target.value,10);
-    setEveningNewSlot((prev)=>({...prev, maxPeople}));
-    const updatedSlots = generateSlots(eveningOpeningTime, eveningClosingTime, maxPeople);
+  const handleEveningMaxPeopleChange = (e) => {
+    const maxPeople = parseInt(e.target.value, 10);
+    setEveningNewSlot((prev) => ({ ...prev, maxPeople }));
+    const updatedSlots = generateSlots(
+      eveningOpeningTime,
+      eveningClosingTime,
+      maxPeople
+    );
     setEveningSlots(updatedSlots);
-  }
+  };
 
-  const formatTime = (timeStamp)=>{
+  const formatTime = (timeStamp) => {
     const date = new Date(timeStamp);
-    return date.toLocaleTimeString('en-IN',{
-      hour:'2-digit',
-      minute:'2-digit',
-      hour12:true,
-    })
-  }
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   const generateSlots = (startTime, endTime, maxPeople) => {
     const slots = [];
-    console.log("slots",slots)
+    console.log("slots", slots);
     const start = new Date(startTime).getTime();
     const end = new Date(endTime).getTime();
 
@@ -315,24 +303,24 @@ const NewGymAdd = () => {
         monthlyRate: parseNumber(formData.trainerMonthlyRate),
       },
       timings: {
-        morning:{
-          openingTime:morningOpeningTime,
-          closingTime:morningClosingTime,
+        morning: {
+          openingTime: morningOpeningTime,
+          closingTime: morningClosingTime,
           slots: morningSlots.map((slot) => ({
             start: slot.start,
             end: slot.end,
             maxPeople: slot.maxPeople,
-          }))
+          })),
         },
-        evening:{
-          openingTime:eveningOpeningTime,
-          closingTime:eveningClosingTime,
+        evening: {
+          openingTime: eveningOpeningTime,
+          closingTime: eveningClosingTime,
           slots: eveningSlots.map((slot) => ({
             start: slot.start,
             end: slot.end,
             maxPeople: slot.maxPeople,
           })),
-        }
+        },
       },
       amenities: amenties
         .filter((amenity) => amenity.checked)
@@ -830,18 +818,18 @@ const NewGymAdd = () => {
                         className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow mt-2 cursor-pointer"
                       />
                     </div>
-                      <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
-                        {morningSlots.map((slot, index) => (
-                          <li
-                            key={index}
-                            className="flex justify-between items-center"
-                          >
-                            <span>
-                              {slot.start} - {slot.end} ({slot.maxPeople} People)
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+                    <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+                      {morningSlots.map((slot, index) => (
+                        <li
+                          key={index}
+                          className="flex justify-between items-center"
+                        >
+                          <span>
+                            {slot.start} - {slot.end} ({slot.maxPeople} People)
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
 
                   {/* Evening Timings */}
@@ -900,21 +888,18 @@ const NewGymAdd = () => {
                         className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow mt-2 cursor-pointer"
                       />
                     </div>
-                      <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
-                        {eveningSlots.map((slot, index) => (
-                          <li
-                            key={index}
-                            className="flex justify-between items-center"
-                          >
-                            <span>
-                              {slot.start} - {slot.end} ({slot.maxPeople} People)
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                  
-
-                    
+                    <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+                      {eveningSlots.map((slot, index) => (
+                        <li
+                          key={index}
+                          className="flex justify-between items-center"
+                        >
+                          <span>
+                            {slot.start} - {slot.end} ({slot.maxPeople} People)
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 

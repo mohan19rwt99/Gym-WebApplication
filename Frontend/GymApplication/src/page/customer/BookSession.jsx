@@ -16,6 +16,7 @@ function BookSession() {
         const response = await axios.get("http://localhost:4000/api/payment/getUserBookingHistory", {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log("response", response.data)
         setHistory(response.data.bookingHistory || []);
       } catch (error) {
         console.error("Error fetching booking history:", error);
@@ -27,14 +28,14 @@ function BookSession() {
     getHistory();
   }, [getToken]);
 
-  const formatTimeTo12Hour = (time) => {
-    if (!time) return 'N/A';
-    const [hour, minute] = time.split(":");
-    const hourNum = parseInt(hour, 10);
-    const ampm = hourNum >= 12 ? "PM" : "AM";
-    const hour12 = hourNum % 12 || 12;
-    return `${hour12}:${minute} ${ampm}`;
-  };
+  // const formatTimeTo12Hour = (time) => {
+  //   if (!time) return 'N/A';
+  //   const [hour, minute] = time.split(":");
+  //   const hourNum = parseInt(hour, 10);
+  //   const ampm = hourNum >= 12 ? "PM" : "AM";
+  //   const hour12 = hourNum % 12 || 12;
+  //   return `${hour12}:${minute} ${ampm}`;
+  // };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -151,9 +152,11 @@ function BookSession() {
                         {booking.status || 'N/A'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatTimeTo12Hour(booking.bookingTime)}
-                    </td>
+                    {booking.bookingTimeSlots.map((slot,index)=>(
+                      <td key={index}>
+                        {slot.time}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </tbody>

@@ -13,13 +13,51 @@ const EditGym = () => {
   const navigate = useNavigate();
   const { getToken } = useKindeAuth();
 
-  const [morningOpeningTime, setMorningOpeningTime] = useState(new Date().setHours(5, 0));
-  const [morningClosingTime, setMorningClosingTime] = useState(new Date().setHours(9, 0));
-  const [eveningOpeningTime, setEveningOpeningTime] = useState(new Date().setHours(16, 0));
-  const [eveningClosingTime, setEveningClosingTime] = useState(new Date().setHours(22, 0));
+  const [file, setFile] = useState();
+  const [viewImages, setImagesView] = useState([null]);
+
+  const [morningOpeningTime, setMorningOpeningTime] = useState(
+    new Date().setHours(5, 0)
+  );
+  const [morningClosingTime, setMorningClosingTime] = useState(
+    new Date().setHours(9, 0)
+  );
+  const [eveningOpeningTime, setEveningOpeningTime] = useState(
+    new Date().setHours(16, 0)
+  );
+  const [eveningClosingTime, setEveningClosingTime] = useState(
+    new Date().setHours(22, 0)
+  );
   const [error, setError] = useState("");
   const [position, setPosition] = useState({ lat: 29.927, lng: 73.876 });
   const [isLoading, setIsLoading] = useState(true);
+
+  const [morningSlots, setMorningSlots] = useState([]);
+  const [eveningSlots, setEveningSlots] = useState([]);
+  const [morningNewSlot, setMorningNewSlot] = useState({
+    start: "",
+    end: "",
+    maxPeople: 0,
+  });
+  const [eveningNewSlot, setEveningNewSlot] = useState({
+    start: "",
+    end: "",
+    maxPeople: 0,
+  });
+
+  const [amenties, setAmenties] = useState([
+    { id: "cardio", label: "Cardio Equipment", checked: false },
+    { id: "Free Weights", label: "Free Weights", checked: false },
+    { id: "Group Exercise", label: "Group Excercise", checked: false },
+    { id: "Showers", label: "Showers", checked: false },
+    { id: "Lockers", label: "Lockers", checked: false },
+    { id: "Changing Room", label: "Changing Room", checked: false },
+    { id: "Weight Machines", label: "Weight Machines", checked: false },
+    { id: "Yoga Spaces", label: "Yoga Spaces", checked: false },
+    { id: "Free Wifi", label: "Free Wifi", checked: false },
+    { id: "Lounge Area", label: "Lounge Area", checked: false },
+    { id: "Parking", label: "Parking", checked: false },
+  ]);
 
   const [formData, setFormData] = useState({
     gymName: "",
@@ -53,7 +91,7 @@ const EditGym = () => {
 
   const [currency, setCurrency] = useState("INR");
 
-  // Handle time changes
+  // Handle opening time
   const handleMorningOpeningTime = (time) => {
     setMorningOpeningTime(time);
     if (new Date(time).getTime() >= new Date(morningClosingTime).getTime()) {
@@ -61,17 +99,46 @@ const EditGym = () => {
       updatedClosingTime.setHours(updatedClosingTime.getHours() + 1);
       setMorningClosingTime(updatedClosingTime);
     }
+    // Regenrate slots
+    const updateSlots = generateSlots(
+      time,
+      morningClosingTime,
+      morningNewSlot.maxPeople
+    );
+    setMorningSlots(updateSlots);
   };
 
+  // Handle Morning closing time
   const handleMorningClosingTime = (time) => {
     if (new Date(time).getTime() <= new Date(morningOpeningTime).getTime()) {
       setError("Morning Closing Time must be after Opening Time");
     } else {
       setError("");
       setMorningClosingTime(time);
+      // Re-generate slots
+      const updatedSlots = generateSlots(
+        morningOpeningTime,
+        time,
+        morningNewSlot.maxPeople
+      );
+      setMorningSlots(updatedSlots);
     }
   };
 
+  // input max People
+
+  const handleMaxPeopleChange = (e) => {
+    const maxPeople = parseInt(e.target.value, 10);
+    setMorningNewSlot((prev) => ({ ...prev, maxPeople }));
+    const updatedSlots = generateSlots(
+      morningOpeningTime,
+      morningClosingTime,
+      maxPeople
+    );
+    setMorningSlots(updatedSlots);
+  };
+
+  // evening Opening Time
   const handleEveningOpeningTime = (time) => {
     setEveningOpeningTime(time);
     if (new Date(time).getTime() >= new Date(eveningClosingTime).getTime()) {
@@ -79,15 +146,80 @@ const EditGym = () => {
       updatedClosingTime.setHours(updatedClosingTime.getHours() + 1);
       setEveningClosingTime(updatedClosingTime);
     }
+    // Regenrate Evening Opening Time
+    const updateSlots = generateSlots(
+      time,
+      eveningClosingTime,
+      eveningNewSlot.maxPeople
+    );
+    setEveningSlots(updateSlots);
   };
 
+  // evening closing Time
   const handleEveningClosingTime = (time) => {
     if (new Date(time).getTime() <= new Date(eveningOpeningTime).getTime()) {
       setError("Evening Closing Time must be after Opening Time");
     } else {
       setError("");
       setEveningClosingTime(time);
+      // Re-generate slots
+      const updatedSlots = generateSlots(
+        eveningOpeningTime,
+        time,
+        eveningNewSlot.maxPeople
+      );
+      setEveningSlots(updatedSlots);
     }
+  };
+
+  const handleEveningMaxPeopleChange = (e) => {
+    const maxPeople = parseInt(e.target.value, 10);
+    setEveningNewSlot((prev) => ({ ...prev, maxPeople }));
+    const updatedSlots = generateSlots(
+      eveningOpeningTime,
+      eveningClosingTime,
+      maxPeople
+    );
+    setEveningSlots(updatedSlots);
+  };
+
+  const formatTime = (timeStamp) => {
+    const date = new Date(timeStamp);
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const generateSlots = (startTime, endTime, maxPeople) => {
+    const slots = [];
+    console.log("slots", slots);
+    const start = new Date(startTime).getTime();
+    const end = new Date(endTime).getTime();
+
+    let current = start;
+    while (current < end) {
+      const next = new Date(current + 30 * 60 * 1000);
+      if (next.getTime() <= end) {
+        slots.push({
+          start: formatTime(current),
+          end: formatTime(next.getTime()),
+          maxPeople: maxPeople || 0,
+        });
+      }
+      current = next.getTime();
+    }
+    return slots;
+  };
+
+  // for amenties checkbox
+  const handleCheckboxChange = (id) => {
+    setAmenties((prevAmenties) =>
+      prevAmenties.map((amentie) =>
+        amentie.id === id ? { ...amentie, checked: !amentie.checked } : amentie
+      )
+    );
   };
 
   // Load Gym Details
@@ -100,54 +232,57 @@ const EditGym = () => {
           gym = location.state.gym;
         } else {
           const token = await getToken();
-          const response = await axios.get(`http://localhost:4000/api/getGym/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
+          const response = await axios.get(
+            `http://localhost:4000/api/getGym/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
           gym = response.data;
         }
-  
+
         // Set all other form data
         setFormData({
           gymName: gym.gymName || "",
           address: {
             location: gym.address?.location || "",
             street: gym.address?.street || "",
-            place_id: gym.address?.place_id || ""
+            place_id: gym.address?.place_id || "",
           },
           pricing: {
             hourlyRate: gym.pricing?.hourlyRate || "",
             weeklyRate: gym.pricing?.weeklyRate || "",
-            monthlyRate: gym.pricing?.monthlyRate || ""
+            monthlyRate: gym.pricing?.monthlyRate || "",
           },
           personalTrainerPricing: {
             hourlyRate: gym.personalTrainerPricing?.hourlyRate || "",
             weeklyRate: gym.personalTrainerPricing?.weeklyRate || "",
-            monthlyRate: gym.personalTrainerPricing?.monthlyRate || ""
+            monthlyRate: gym.personalTrainerPricing?.monthlyRate || "",
           },
-          description: gym.description || ""
+          description: gym.description || "",
         });
-  
+
         // Set timings
         if (gym.timings?.morning) {
           setMorningOpeningTime(new Date(gym.timings.morning.openingTime));
           setMorningClosingTime(new Date(gym.timings.morning.closingTime));
         }
-  
+
         if (gym.timings?.evening) {
           setEveningOpeningTime(new Date(gym.timings.evening.openingTime));
           setEveningClosingTime(new Date(gym.timings.evening.closingTime));
         }
-  
+
         // Set position - make sure to handle cases where coordinates might be null/undefined
         if (gym.coordinates && gym.coordinates.lat && gym.coordinates.lng) {
           setPosition({
             lat: gym.coordinates.lat,
-            lng: gym.coordinates.lng
+            lng: gym.coordinates.lng,
           });
         }
-  
+
         if (gym.currency) setCurrency(gym.currency);
       } catch (error) {
         console.error("Error loading gym data:", error);
@@ -156,26 +291,26 @@ const EditGym = () => {
         setIsLoading(false);
       }
     };
-  
+
     fetchGymData();
   }, [id, location.state, getToken]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
@@ -185,30 +320,59 @@ const EditGym = () => {
 
     const data = {
       ...formData,
-      currency:{
-          name:currency,
-          symbol:currencySymbols[currency]
+      currency: {
+        name: currency,
+        symbol: currencySymbols[currency],
       },
       coordinates: position,
       timings: {
         morning: {
-          openingTime: new Date(morningOpeningTime),
-          closingTime: new Date(morningClosingTime),
+          openingTime: morningOpeningTime,
+          closingTime: morningClosingTime,
+          slots: morningSlots.map((slot) => ({
+            start: slot.start,
+            end: slot.end,
+            maxPeople: slot.maxPeople,
+          })),
         },
         evening: {
-          openingTime: new Date(eveningOpeningTime),
-          closingTime: new Date(eveningClosingTime),
+          openingTime: eveningOpeningTime,
+          closingTime: eveningClosingTime,
+          slots: eveningSlots.map((slot) => ({
+            start: slot.start,
+            end: slot.end,
+            maxPeople: slot.maxPeople,
+          })),
         },
       },
+      amenities: amenties
+        .filter((amenity) => amenity.checked)
+        .map((amenity) => ({
+          id: amenity.id,
+          label: amenity.label,
+          checked: amenity.checked,
+        })),
     };
+  
+    console.log("data", data)
 
     try {
+      console.log("data", data);
+      const dataForm = new FormData();
+      dataForm.append("data", JSON.stringify(data));
+      dataForm.append("image", file);
       const token = await getToken();
-      const response = await axios.put(`http://localhost:4000/api/updateGym/${id}`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await axios.put(
+        `http://localhost:4000/api/updateGym/${id}`,
+        dataForm,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("response", response.data)
 
       toast.success(response.data.msg || "Gym Updated Successfully", {
         position: "top-right",
@@ -222,6 +386,19 @@ const EditGym = () => {
         duration: 4000,
       });
     }
+  };
+
+  const handleInputImage = (e) => {
+    const showImage = e.target.files[0];
+    if (showImage) {
+      setFile(showImage);
+      setImagesView(URL.createObjectURL(showImage));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFile(null);
+    setImagesView(null);
   };
 
   if (isLoading) {
@@ -306,6 +483,62 @@ const EditGym = () => {
                       required
                     ></textarea>
                   </div>
+                  <div className="sm:col-span-6">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Amenties
+                    </label>
+                    <div className="grid grid-cols-3 gap-4 mt-2">
+                      {amenties.map((amentie) => (
+                        <div key={amentie.id}>
+                          <input
+                            type="checkbox"
+                            name="amenties"
+                            checked={amentie.checked}
+                            onChange={() => handleCheckboxChange(amentie.id)}
+                            className="w-4 text-blue-600 bg-gray-100 rounded border-gray-300 focus:ring-blue-500"
+                          />
+                          <label
+                            className={`ml-2 text-gray-700
+                              }`}
+                          >
+                            {amentie.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Image */}
+              <div className="border-b border-gray-200 pb-8">
+                <h3 className="text-lg font-medium text-gray-900 mb-6">
+                  Gallery
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {!viewImages && (
+                    <input
+                      type="file"
+                      onChange={handleInputImage}
+                      accept="image/*"
+                      className="border border-blue-500 w-full h-[300px] object-fit"
+                    />
+                  )}
+                  {viewImages && (
+                    <div className="relative">
+                      <img
+                        src={viewImages}
+                        alt="Uploaded"
+                        className="w-full border border-gray-500 h-[300px] object-cover"
+                      />
+                      <button
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -365,8 +598,8 @@ const EditGym = () => {
                               name="pricing.hourlyRate"
                               id="hourlyRate"
                               value={formData.pricing.hourlyRate}
-                              onChange={(e)=>{
-                                if(e.target.value.length <= 7){
+                              onChange={(e) => {
+                                if (e.target.value.length <= 7) {
                                   handleChange(e);
                                 }
                               }}
@@ -395,8 +628,8 @@ const EditGym = () => {
                               name="pricing.weeklyRate"
                               id="weeklyRate"
                               value={formData.pricing.weeklyRate}
-                              onChange={(e)=>{
-                                if(e.target.value.length <= 7){
+                              onChange={(e) => {
+                                if (e.target.value.length <= 7) {
                                   handleChange(e);
                                 }
                               }}
@@ -425,8 +658,8 @@ const EditGym = () => {
                               name="pricing.monthlyRate"
                               id="monthlyRate"
                               value={formData.pricing.monthlyRate}
-                              onChange={(e)=>{
-                                if(e.target.value.length <= 7){
+                              onChange={(e) => {
+                                if (e.target.value.length <= 7) {
                                   handleChange(e);
                                 }
                               }}
@@ -466,8 +699,8 @@ const EditGym = () => {
                               name="personalTrainerPricing.hourlyRate"
                               id="trainerHourlyRate"
                               value={formData.personalTrainerPricing.hourlyRate}
-                              onChange={(e)=>{
-                                if(e.target.value.length <= 7){
+                              onChange={(e) => {
+                                if (e.target.value.length <= 7) {
                                   handleChange(e);
                                 }
                               }}
@@ -496,8 +729,8 @@ const EditGym = () => {
                               name="personalTrainerPricing.weeklyRate"
                               id="trainerWeeklyRate"
                               value={formData.personalTrainerPricing.weeklyRate}
-                              onChange={(e)=>{
-                                if(e.target.value.length <= 7){
+                              onChange={(e) => {
+                                if (e.target.value.length <= 7) {
                                   handleChange(e);
                                 }
                               }}
@@ -525,9 +758,11 @@ const EditGym = () => {
                               type="number"
                               name="personalTrainerPricing.monthlyRate"
                               id="trainerMonthlyRate"
-                              value={formData.personalTrainerPricing.monthlyRate}
-                              onChange={(e)=>{
-                                if(e.target.value.length <= 7){
+                              value={
+                                formData.personalTrainerPricing.monthlyRate
+                              }
+                              onChange={(e) => {
+                                if (e.target.value.length <= 7) {
                                   handleChange(e);
                                 }
                               }}
@@ -551,8 +786,10 @@ const EditGym = () => {
                 </h3>
 
                 {/* Morning Timings */}
-                <div className="mb-8">
-                  <h4 className="text-md font-medium text-gray-800 mb-4">Morning Timings</h4>
+                <div className="w-full max-w-sm min-w-[200px]">
+                  <h4 className="text-lg font-medium text-gray-800 mb-4">
+                    Morning Timings
+                  </h4>
                   <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div className="sm:col-span-3">
                       <label className="block text-sm font-medium text-gray-700">
@@ -566,7 +803,7 @@ const EditGym = () => {
                         timeIntervals={30}
                         timeCaption="Time"
                         dateFormat="h:mm aa"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+                        className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
                       />
                     </div>
                     <div className="sm:col-span-3">
@@ -588,11 +825,41 @@ const EditGym = () => {
                       )}
                     </div>
                   </div>
+                  <div className="w-full max-w-sm min-w-[200px]">
+                    <label
+                      htmlFor="maxPeople"
+                      className="block text-sm font-medium"
+                    >
+                      Max People
+                    </label>
+                    <input
+                      type="number"
+                      id="maxPeople"
+                      value={morningNewSlot.maxPeople}
+                      onChange={handleMaxPeopleChange}
+                      placeholder="Enter Max People"
+                      className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow mt-2 cursor-pointer"
+                    />
+                  </div>
+                  <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+                    {morningSlots.map((slot, index) => (
+                      <li
+                        key={index}
+                        className="flex justify-between items-center"
+                      >
+                        <span>
+                          {slot.start} - {slot.end} ({slot.maxPeople} People)
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
                 {/* Evening Timings */}
-                <div className="mb-8">
-                  <h4 className="text-md font-medium text-gray-800 mb-4">Evening Timings</h4>
+                <div className="w-full max-w-sm min-w-[200px] mt-3">
+                  <h4 className="text-lg font-medium text-gray-800 mb-4">
+                    Evening Timings
+                  </h4>
                   <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div className="sm:col-span-3">
                       <label className="block text-sm font-medium text-gray-700">
@@ -628,6 +895,34 @@ const EditGym = () => {
                       )}
                     </div>
                   </div>
+                  <div className="w-full max-w-sm min-w-[200px]">
+                    <label
+                      htmlFor="maxPeople"
+                      className="block text-sm font-medium"
+                    >
+                      Max People
+                    </label>
+                    <input
+                      type="number"
+                      id="maxPeople"
+                      value={eveningNewSlot.maxPeople}
+                      onChange={handleEveningMaxPeopleChange}
+                      placeholder="Enter Max People"
+                      className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow mt-2 cursor-pointer"
+                    />
+                  </div>
+                  <ul className="mt-4 max-w-md space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400">
+                    {eveningSlots.map((slot, index) => (
+                      <li
+                        key={index}
+                        className="flex justify-between items-center"
+                      >
+                        <span>
+                          {slot.start} - {slot.end} ({slot.maxPeople} People)
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
 
@@ -643,7 +938,6 @@ const EditGym = () => {
                         position={position}
                         setPosition={setPosition}
                         setFormData={setFormData}
-
                       />
                     </div>
                     <p className="mt-2 text-sm text-gray-500">

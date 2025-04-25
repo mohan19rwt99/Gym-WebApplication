@@ -21,7 +21,7 @@ router.post('/addgym',protectRoute,getUser,upload.single('image'),addGym);
 router.get("/getGym", protectRoute, getUser , getGym);
 router.get("/get-gym-city", protectRoute, getUser, getGymCity)
 router.get("/getSingleGym/:id",protectRoute,getUser, getSingleGym)
-router.put("/updateGym/:id",protectRoute,getUser, updateGym);
+router.put("/updateGym/:id",protectRoute,getUser, upload.single('image'), updateGym);
 router.delete("/deleteGym/:id", protectRoute,getUser ,deleteGym);
 
 // Gym fetch According Current Location

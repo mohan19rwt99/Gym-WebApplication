@@ -206,23 +206,19 @@ export const getSingleGym = async (req, res) => {
 // Update Gym
 export const updateGym = async (req, res) => {
   const { id } = req.params;
-  console.log("Received ID:", id);
-  console.log("Incoming Data for update:", req.body);
-  const updatedData = {
-    ...req.body,
-    gymName: req.body.gymName || req.body.name
-  }
+  
+  const updatedData = JSON.parse(req.body.data);
 
-  console.log("Incoming Data for update", updatedData)
+  console.log("Incoming Data for update JSon 1", updatedData)
 
 
   try {
     const updatedGym = await GymAdd.findByIdAndUpdate(id, updatedData, { new: true });
-    console.log("Updated Gym Details:", updatedGym);
+    
     if (!updatedGym) {
       return res.status(404).json({ message: 'Gym not found' });
     }
-    console.log('Updated Gym Details', updatedGym)
+    console.log('Updated Gym Details 5', updatedGym)
     res.status(200).json(updatedGym);
   } catch (error) {
     console.error("Error updating gym:", error);

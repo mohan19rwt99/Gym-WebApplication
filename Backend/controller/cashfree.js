@@ -15,6 +15,93 @@ function generateOrderId() {
 }
 
 // Create Payment
+// export const createPayment = async (req, res) => {
+//   try {
+//     const {
+//       amount,
+//       email,
+//       phone,
+//       gymId,
+//       selectedPlan,
+//       startDate,
+//       endDate,
+//       gymNames,
+//       currency,
+//       bookingDate,
+//       bookingTimeSlots,
+
+//     } = req.body;
+//     console.log("create Payment", bookingTimeSlots)
+
+//     const userId = req.user?.sub;
+//     const buyer_name = req.user?.given_name || req.user?.name || "Gym User"; // Real user name from Kinde
+
+//     if (!userId || !email || !phone || !gymId || !selectedPlan) {
+//       return res.status(400).json({ message: "Missing required fields" });
+//     }
+
+//     const orderId = generateOrderId();
+
+//     const payload = {
+//       order_id: orderId,
+//       order_amount: amount,
+//       order_currency: "INR", // Testing
+//       customer_details: {
+//         customer_id: userId,
+//         customer_email: email,
+//         customer_phone: phone,
+//         customer_name: buyer_name,
+//       },
+//       order_meta: {
+//         return_url: `http://localhost:3000/confirm-payment/${orderId}`,
+//       },
+//     };
+
+//     const response = await axios.post(CASHFREE_URL, payload, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         "x-api-version": "2023-08-01",
+//         "x-client-id": CASHFREE_APP_ID,
+//         "x-client-secret": CASHFREE_SECRET_KEY,
+//       },
+//     });
+
+//     const paymentSessionId = response?.data?.payment_session_id;
+
+//     const newPayment = new Payment({
+//       orderId,
+//       userId,
+//       gymId,
+//       buyer_name,
+//       email,
+//       phone,
+//       selectedPlan,
+//       amount,
+//       currency,
+//       status: "pending",
+//       startDate,
+//       endDate,
+//       gymNames,
+//       bookingDate,
+//       bookingTimeSlots,
+//     });
+
+//     console.log("New PYAMENT", newPayment)
+
+//     await newPayment.save();
+
+//     res.status(201).json({
+//       message: "Payment order created",
+//       paymentSessionId,
+//       orderId,
+//     });
+
+//   } catch (error) {
+//     console.error("Payment Error:", error?.response?.data || error.message);
+//     res.status(500).json({ message: "Server error", error: error?.response?.data || error.message });
+//   }
+// };
+
 export const createPayment = async (req, res) => {
   try {
     const {
@@ -28,23 +115,39 @@ export const createPayment = async (req, res) => {
       gymNames,
       currency,
       bookingDate,
-      bookingTime,
-
+      bookingTimeSlots = [], // Default to empty array
+      numberOfSlots
     } = req.body;
 
+    console.log("Received bookingTimeSlots:", bookingTimeSlots);
+
     const userId = req.user?.sub;
-    const buyer_name = req.user?.given_name || req.user?.name || "Gym User"; // Real user name from Kinde
+    const buyer_name = req.user?.given_name || req.user?.name || "Gym User";
 
     if (!userId || !email || !phone || !gymId || !selectedPlan) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+   // Validate and format bookingTimeSlots
+const formattedSlots = bookingTimeSlots.map(slot => {
+  if (!slot.time) {
+    throw new Error(`Time is required for slot with date: ${slot.date} and slotId: ${slot.slotId}`);
+  }
+  
+  return {
+    date: slot.date || bookingDate, // Fallback to bookingDate if not provided
+    time: slot.time,
+    slotId: slot.slotId,
+    status: 'booked'
+  };
+});
 
     const orderId = generateOrderId();
 
     const payload = {
       order_id: orderId,
       order_amount: amount,
-      order_currency: "INR", // Testing
+      order_currency: currency || "INR",
       customer_details: {
         customer_id: userId,
         customer_email: email,
@@ -76,18 +179,26 @@ export const createPayment = async (req, res) => {
       phone,
       selectedPlan,
       amount,
+      baseAmount: numberOfSlots ? amount / numberOfSlots : amount,
+      numberOfSlots: numberOfSlots || 1,
       currency,
       status: "pending",
       startDate,
       endDate,
       gymNames,
       bookingDate,
-      bookingTime,
+      bookingTimeSlots: formattedSlots, // Use the formatted slots
+      isActive: true
     });
 
-    console.log("New PYAMENT", newPayment)
+    console.log("New Payment Document:", newPayment);
 
     await newPayment.save();
+
+    // // Update slot availability in the gym
+    // if (formattedSlots.length > 0) {
+    //   await updateSlotAvailability(gymId, formattedSlots.map(s => s.slotId), 'book');
+    // }
 
     res.status(201).json({
       message: "Payment order created",
@@ -97,12 +208,12 @@ export const createPayment = async (req, res) => {
 
   } catch (error) {
     console.error("Payment Error:", error?.response?.data || error.message);
-    res.status(500).json({ message: "Server error", error: error?.response?.data || error.message });
+    res.status(500).json({ 
+      message: "Server error", 
+      error: error?.response?.data || error.message 
+    });
   }
 };
-
-
-
 
 
 // verify payment

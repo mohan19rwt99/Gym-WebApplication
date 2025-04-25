@@ -80,53 +80,15 @@ const BookDetails = () => {
       toast.error("Please select a date.");
       return;
     }
-    if (!selectedTime) {
+    if (!selectedTime.length) {
       toast.error("Please select a gym visit time.");
       return;
     }
 
     console.log("selectedTime", selectedTime);
 
-    // const selectedTimeNumber = parseInt(selectedTime.replace(":", ""), 10);
-    // const morningOpeningTimeNumber = parseInt(
-    //   morningOpeningTime.replace(":", ""),
-    //   10
-    // );
-    // const morningClosingTimeNumber = parseInt(
-    //   morningClosingTime.replace(":", ""),
-    //   10
-    // );
-    // const eveningOpeningTimeNumber = parseInt(
-    //   eveningOpeningTime.replace(":", ""),
-    //   10
-    // );
-    // const eveningClosingTimeNumber = parseInt(
-    //   eveningClosingTime.replace(":", ""),
-    //   10
-    // );
-
-    // const isMorningSlot =
-    //   selectedTimeNumber >= morningOpeningTimeNumber &&
-    //   selectedTimeNumber <= morningClosingTimeNumber;
-
-    // const isEveningSlot =
-    //   selectedTimeNumber >= eveningOpeningTimeNumber &&
-    //   selectedTimeNumber <= eveningClosingTimeNumber;
-
-    // if (!isMorningSlot && !isEveningSlot) {
-    //   toast.error(
-    //     `Please select a valid time between ${morningOpeningTime}–${morningClosingTime} or ${eveningOpeningTime}–${eveningClosingTime}`,
-    //     {
-    //       position: "top-center",
-    //       duration: 3000,
-    //     }
-    //   );
-    //   return;
-    // }
-
-    // Success — go to check-price
     navigate(`/check-price/${gymId}`, {
-      state: { selectedDate, selectedTime },
+      state:  { selectedDate, selectedTime,  numberOfSlots: selectedTime.length  },
     });
   };
 
@@ -162,13 +124,14 @@ const BookDetails = () => {
     }
 
     setSelectedTime((prevSelected) => {
-      if (prevSelected.includes(slot._id, slot.time)) {
-        return prevSelected.filter((id) => id !== slot._id);
+      const exists = prevSelected.find((s) => s._id === slot._id);
+      if (exists) {
+        return prevSelected.filter((s) => s._id !== slot._id);
       } else {
-        // Add to selection
-        return [...prevSelected, slot._id, slot.time];
+        return [...prevSelected, { _id: slot._id, time: slot.start }];
       }
     });
+    
   };
 
   return (
@@ -275,7 +238,7 @@ const BookDetails = () => {
                       onClick={() => timeSelect(slot)}
                       disabled={slot.booked >= slot.maxPeople}
                       className={`px-4 py-2 rounded-lg border ${
-                        selectedTime.includes(slot._id)
+                        selectedTime.some((s) => s._id === slot._id)
                           ? "bg-gray-800 text-white"
                           : "bg-white text-gray-800"
                       } ${
