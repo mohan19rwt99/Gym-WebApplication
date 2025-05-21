@@ -65,7 +65,7 @@ Feel free to fork the repository and submit a pull request.
 
 For queries, suggestions, or collaborations:
 
-**Email:** mohan19rwt99@gmail.com  
+**Email:** mohan.jsdev@gmail.com  
 **LinkedIn:**https://www.linkedin.com/in/mohan-singh-1495aa18a/
 
 ---
